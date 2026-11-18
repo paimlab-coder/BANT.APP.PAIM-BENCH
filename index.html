@@ -1,736 +1,317 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Ocupação & Agendamentos | Salesforce</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- SDKs do Firebase (Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            blue: '#06418a',
-                            darkblue: '#032856',
-                            orange: '#F8820A',
-                            lightorange: '#FFF5EB',
-                            graybg: '#f8fafc',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .tab-active { border-bottom: 3px solid #F8820A; color: #06418a; font-weight: 600; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Benchmarking de concorrentes · BSA · 18/11/2026</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
+<style>
+:root{--bg:#070D12;--panel:#0E1A24;--card:#132431;--line:#1E384A;--txt:#E2F1F8;--muted:#8AA8B8;--brand:#00FFC4;--cta:#F2A93B;--info:#00B4D8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.mx-side{width:220px;flex:0 0 220px;position:sticky;top:0;height:100vh;overflow:hidden;background:#050B10;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.mx-side canvas{position:absolute;inset:0;opacity:.45;width:100%;height:100%}
+.wrap{flex:1;min-width:0;max-width:1100px;margin:0 auto;padding:22px 16px 40px}
+.holo-wrap{perspective:1400px;margin-bottom:24px}.holo-hero{position:relative;overflow:hidden;border-radius:18px;padding:26px 26px 20px;background:radial-gradient(120% 140% at 0% 0%,rgba(0,255,196,.10),transparent 55%),radial-gradient(120% 140% at 100% 0%,rgba(0,180,216,.10),transparent 55%),linear-gradient(160deg,#0B1620 0%,#0E1A24 55%,#0A141C 100%);border:1px solid rgba(0,255,196,.22);box-shadow:0 30px 70px -20px rgba(0,0,0,.75),0 0 0 1px rgba(0,180,216,.06) inset,0 0 40px rgba(0,255,196,.06);transform-style:preserve-3d;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s ease-out;animation:holoIn 1.1s cubic-bezier(.2,.8,.2,1) both}@keyframes holoIn{from{opacity:0;transform:translateZ(-260px) rotateX(16deg) scale(.96)}to{opacity:1;transform:none}}.holo-hero::before{content:"";position:absolute;inset:0;border-radius:18px;padding:1px;background:conic-gradient(from var(--ang,0deg),transparent 0 60%,rgba(0,255,196,.75) 72%,rgba(0,180,216,.6) 80%,transparent 92%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:holoSpin 8s linear infinite;pointer-events:none}@property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}@keyframes holoSpin{to{--ang:360deg}}.holo-grid{position:absolute;left:-20%;right:-20%;bottom:-40%;height:120%;background-image:linear-gradient(rgba(0,255,196,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,196,.10) 1px,transparent 1px);background-size:44px 44px;transform:rotateX(68deg);transform-origin:50% 100%;-webkit-mask-image:linear-gradient(to top,#000 10%,transparent 75%);mask-image:linear-gradient(to top,#000 10%,transparent 75%);animation:holoFloor 6s linear infinite;pointer-events:none}@keyframes holoFloor{to{background-position:0 44px,0 0}}.holo-scan{position:absolute;left:0;right:0;top:-30%;height:30%;background:linear-gradient(180deg,transparent,rgba(0,255,196,.07) 45%,rgba(0,255,196,.16) 50%,transparent);animation:holoScan 7s ease-in-out infinite;pointer-events:none}@keyframes holoScan{0%{top:-30%}60%,100%{top:110%}}.hud{position:absolute;width:18px;height:18px;border:2px solid rgba(0,255,196,.55);pointer-events:none}.hud.tl{top:10px;left:10px;border-right:0;border-bottom:0;border-top-left-radius:6px}.hud.tr{top:10px;right:10px;border-left:0;border-bottom:0;border-top-right-radius:6px}.hud.bl{bottom:10px;left:10px;border-right:0;border-top:0;border-bottom-left-radius:6px}.hud.br{bottom:10px;right:10px;border-left:0;border-top:0;border-bottom-right-radius:6px}.holo-inner{position:relative;transform:translateZ(46px);transform-style:preserve-3d}.holo-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.holo-eyebrow{font-size:11.5px;letter-spacing:2px;font-weight:800;text-transform:uppercase;color:#00FFC4;display:flex;align-items:center;gap:8px}.holo-eyebrow .dot{width:8px;height:8px;border-radius:50%;background:#00FFC4;box-shadow:0 0 10px #00FFC4;animation:holoDot 2s ease-in-out infinite}@keyframes holoDot{50%{opacity:.35}}.holo-title{margin:8px 0 6px;font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.5px;line-height:1.15;color:#F2FBFF;text-shadow:0 0 18px rgba(0,255,196,.25),0 10px 30px rgba(0,0,0,.6);transform:translateZ(30px)}.holo-title span{font-weight:400;font-size:.55em;color:#8AA8B8;letter-spacing:0;text-shadow:none}.holo-sub{color:#9FB9C7;font-size:13px;max-width:720px}.holo-term{margin-top:14px;font:12.5px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#7FE9D4;background:rgba(0,0,0,.28);border:1px solid rgba(0,255,196,.18);border-radius:10px;padding:8px 12px;display:inline-block;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.holo-term .p{color:#00B4D8;margin-right:6px}.holo-term .cur{animation:holoDot 1s steps(1) infinite}.holo-actions{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid rgba(30,56,74,.7)}@media (prefers-reduced-motion:reduce){.holo-hero,.holo-hero::before,.holo-grid,.holo-scan,.holo-eyebrow .dot,.holo-term .cur{animation:none!important}.holo-hero{transform:none!important}}
+.bench-prod{grid-column:1/-1;display:grid;grid-template-columns:240px minmax(0,1fr);gap:14px;align-items:stretch;margin-top:4px;padding:12px;border:1px solid rgba(0,255,196,.16);border-radius:12px;background:linear-gradient(135deg,rgba(0,255,196,.04),rgba(0,180,216,.03))}.pc-ilu{margin:0;color:#00FFC4;background:rgba(0,0,0,.25);border:1px solid #1E384A;border-radius:10px;padding:8px}.pc-ilu svg{display:block;width:100%;height:auto}.pc-ilu figcaption{font-size:10.5px;color:#8AA8B8;margin-top:4px;line-height:1.35}.pc-box{font-size:12.5px;color:#8AA8B8}.pc-t{font-weight:700;color:#E2F1F8;font-size:12.5px}.pc-v{font-size:22px;font-weight:800;color:#E2F1F8;margin:4px 0;letter-spacing:-.3px}.pc-m{line-height:1.5}.pc-m a,.pc-links a{color:#00B4D8;font-weight:600;text-decoration:none}.pc-links{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}.pev{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:5px;margin-right:4px}.pev-f{background:rgba(0,245,212,.14);color:#00F5D4}.pev-e{background:rgba(170,130,255,.16);color:#c9b2ff}.pev-n{background:#132431;color:#8AA8B8;border:1px solid #1E384A}@media(max-width:760px){.bench-prod{grid-template-columns:1fr}}
+.nw-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 0;border-top:1px solid #1E384A}.nw-item:first-child{border-top:0}.nw-item a.t{color:#E2F1F8;font-weight:700;text-decoration:none;font-size:13.5px;line-height:1.4}.nw-item a.t:hover{color:#00FFC4;text-decoration:underline}.nw-meta{font-size:12px;color:#8AA8B8;margin-top:3px}.nw-chip{display:inline-block;font-weight:800;font-size:10.5px;padding:2px 7px;border-radius:7px;background:rgba(255,92,92,.12);color:#ff9c9c;border:1px solid rgba(255,92,92,.35);margin-right:6px}.nw-nv{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:5px;background:#132431;color:#8AA8B8;border:1px solid #1E384A;margin-left:6px}.nw-new{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff3b3b;margin-right:6px;vertical-align:1px}.nw-status{font-size:12px;color:#8AA8B8;font-weight:400;margin-left:8px}.share-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pg2{display:flex;min-height:100vh;transition:transform .55s cubic-bezier(.7,0,.2,1)}body.map-open{overflow:hidden}body.map-open .pg2{transform:translateX(-100vw)}.heat-fab{position:fixed;top:16px;right:16px;z-index:55;width:74px;height:74px;border-radius:50%;border:2px solid rgba(255,170,60,.8);cursor:pointer;color:#fff;font:900 13px/1 Inter,system-ui,sans-serif;letter-spacing:.5px;display:grid;place-items:center;overflow:hidden;box-shadow:0 6px 22px rgba(0,0,0,.55),0 0 18px rgba(255,120,40,.35);background:#0b0f14}.heat-fab::before{content:"";position:absolute;inset:-30%;background:radial-gradient(circle at 30% 35%,rgba(255,50,30,.95) 0 14%,transparent 34%),radial-gradient(circle at 68% 30%,rgba(255,190,40,.9) 0 12%,transparent 30%),radial-gradient(circle at 55% 70%,rgba(255,110,30,.9) 0 16%,transparent 36%),radial-gradient(circle at 28% 72%,rgba(40,140,255,.85) 0 12%,transparent 30%),radial-gradient(circle at 78% 66%,rgba(0,255,196,.7) 0 10%,transparent 28%);filter:blur(6px) saturate(1.2);animation:heatSpin 9s linear infinite,heatPulse 2.4s ease-in-out infinite}.heat-fab span{position:relative;z-index:1;text-shadow:0 1px 6px rgba(0,0,0,.95);text-align:center}.heat-fab span small{display:block;font-size:8.5px;font-weight:800;color:#ffe0b8;margin-top:2px}.heat-fab[hidden]{display:none}.heat-fab:focus-visible{outline:2px solid #00FFC4;outline-offset:3px}@keyframes heatSpin{to{transform:rotate(360deg)}}@keyframes heatPulse{50%{opacity:.75;filter:blur(8px) saturate(1.5)}}.map-screen{position:fixed;inset:0;z-index:52;background:#070D12;display:flex;transform:translateX(100vw);transition:transform .55s cubic-bezier(.7,0,.2,1);overflow-y:auto;overflow-x:hidden}.map-screen.open{transform:none}#compMap{height:560px;border-radius:12px;border:1px solid #1E384A;background:#e8eaed;overflow:hidden}.map-dark .leaflet-container{background:#e8eaed;font:12px/1.45 Inter,system-ui,sans-serif}.map-dark .leaflet-popup-content-wrapper,.map-dark .leaflet-popup-tip{background:#0E1A24;color:#E2F1F8;border:1px solid #1E384A}.map-dark .leaflet-popup-content a{color:#00B4D8}.map-dark .leaflet-control-attribution{background:rgba(7,13,18,.8);color:#8AA8B8}.map-dark .leaflet-control-attribution a{color:#8AA8B8}.flow-line{stroke-dasharray:7 7;animation:flowDash 1.6s linear infinite}@keyframes flowDash{to{stroke-dashoffset:-28}}.wh-icon svg{filter:drop-shadow(0 0 6px rgba(0,230,120,.6))}.map-legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:12px;color:#8AA8B8;margin-top:10px}.map-legend i{display:inline-block;vertical-align:-2px;margin-right:6px}.lg-fab{width:12px;height:12px;border-radius:50%;background:#2f80ff;box-shadow:0 0 8px #2f80ff;border:2px solid #fff}.lg-line{width:26px;height:0;border-top:2px dashed #3d8bff}.tbl{overflow:auto;border:1px solid #1E384A;border-radius:10px}.tbl table{border-collapse:collapse;width:100%;min-width:760px;font-size:12.5px}.tbl th{background:#132431;color:#8AA8B8;text-align:left;font-size:11.5px;padding:9px;border-bottom:1px solid #1E384A}.tbl td{padding:9px;border-bottom:1px solid #1E384A;vertical-align:top}.tbl small{color:#8AA8B8}.back-btn{background:#0E1A24;border:1px solid #1E384A;color:#E2F1F8;border-radius:10px;padding:9px 14px;font:600 12.5px Inter,system-ui,sans-serif;cursor:pointer}.back-btn:hover{border-color:#00FFC4;color:#00FFC4}.holo-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}@media(prefers-reduced-motion:reduce){.heat-fab::before,.flow-line{animation:none}.pg2,.map-screen{transition:none}}
+@media(max-width:1200px){.mx-side{display:none}}
+.muted{color:var(--muted);font-size:12.5px}
+.conf{margin-top:10px;font-size:12px;color:#ffb3b3;border:1px solid rgba(255,92,92,.4);background:rgba(255,92,92,.08);border-radius:10px;padding:8px 10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}.kpi b{display:block;font-size:24px;margin-top:4px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+.panel h2{font-size:15px;margin:0 0 12px}
+.filters{display:flex;gap:10px;flex-wrap:wrap}.filters select{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:180px;font:inherit}
+.card{border-top:1px solid var(--line);padding:16px 0;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:start}.card:first-child{border-top:0}
+.card h3{margin:0 0 6px;font-size:15px;line-height:1.4}.card p{margin:6px 0;color:var(--muted);font-size:12.8px}
+.meta{font-size:12px!important}
+.chip{display:inline-block;font-weight:800;font-size:11px;padding:2px 8px;border-radius:8px;background:rgba(255,92,92,.12);color:#ff9c9c;border:1px solid rgba(255,92,92,.35);margin-right:6px}
+.ev{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:5px;margin-right:4px}
+.ev.f{background:rgba(0,245,212,.14);color:#00F5D4}.ev.h{background:rgba(242,169,59,.16);color:var(--cta)}.ev.r{background:rgba(0,180,216,.14);color:var(--info)}
+a{color:var(--info);font-weight:600;text-decoration:none}a:hover{text-decoration:underline}
+.side{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px;color:var(--muted)}.side b{display:block;color:var(--txt);font-size:13px;margin-bottom:4px}.side div{margin-top:5px}
+ol{margin:0;padding-left:20px}li{margin:10px 0}li small{display:block;color:var(--muted);margin-top:3px}
+footer{color:var(--muted);font-size:11.5px;text-align:center;margin-top:24px}
+@media(max-width:760px){.card{grid-template-columns:1fr}}
+</style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
-
-    <!-- Header Principal -->
-    <header class="bg-brand-blue text-white shadow-lg sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-24">
-                <div class="flex items-center space-x-6">
-                    <div class="flex items-center justify-center py-2 px-1">
-                        <img src="https://www.bertoliniarmazenagem.com.br/wp-content/uploads/2024/11/bertolini-logo-claro.svg" 
-                             alt="Logo Bertolini Armazenagem" 
-                             class="h-10 sm:h-12 w-auto object-contain transition-transform duration-300 hover:scale-105"
-                             onerror="this.onerror=null; this.src='https://placehold.co/200x50/06418a/ffffff?text=BERTOLINI';">
-                    </div>
-
-                    <div class="h-10 w-px bg-white/20 hidden sm:block"></div>
-
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="bg-brand-orange/20 text-orange-200 text-xs px-2.5 py-0.5 rounded-full font-medium uppercase tracking-wider border border-brand-orange/40">Treinamento Oficial</span>
-                            <span class="text-xs text-slate-300 hidden md:inline"><i class="fa-regular fa-clock mr-1"></i>Novembro & Dezembro 2026</span>
-                        </div>
-                        <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white leading-tight mt-0.5">
-                            1º Treinamento - SALES FORCE <span class="text-slate-300 font-normal text-sm hidden lg:inline">(preenchimento de campos específicos)</span>
-                        </h1>
-                    </div>
-                </div>
-
-                <!-- Perfil do Responsável -->
-                <div class="hidden md:flex items-center space-x-3 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
-                    <div class="relative">
-                        <div class="w-10 h-10 rounded-full bg-brand-orange text-white flex items-center justify-center font-bold text-lg shadow">
-                            DP
-                        </div>
-                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-brand-blue rounded-full"></span>
-                    </div>
-                    <div class="text-left text-xs">
-                        <p class="font-semibold text-white">Diogo Paim Gonçalves</p>
-                        <p class="text-slate-300">Instrutor & Facilitador</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Conteúdo Principal -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-
-        <!-- Barra de Status e Última Alteração (Audit Log) -->
-        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-sm">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider">Histórico de Alterações (Última Modificação)</h4>
-                    <p class="text-xs font-medium text-amber-700" id="last-update-text">Carregando histórico em tempo real...</p>
-                </div>
-            </div>
-            <button onclick="openAuditModal()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg transition shadow">
-                <i class="fa-solid fa-list-ul mr-1"></i> Ver Log Completo
-            </button>
-        </div>
-
-        <!-- Banner Informativo da Origem / Contexto -->
-        <div class="bg-gradient-to-r from-brand-blue to-blue-900 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div class="relative z-10 max-w-3xl">
-                <div class="flex items-center gap-2 text-brand-orange font-semibold text-sm mb-1">
-                    <i class="fa-solid fa-envelope-open-text"></i> Alinhamento da Agenda por E-mail (PAIM.IA.PROSPECT)
-                </div>
-                <p class="text-sm text-slate-200 leading-relaxed">
-                    Janelas de disponibilidade definidas por <strong>Diogo Paim Gonçalves</strong> para realização do treinamento de Sales Force. Utilize esta ferramenta para alocar sua equipe nos horários livres com salvamento instantâneo na nuvem.
-                </p>
-            </div>
-            <div class="flex gap-2 flex-wrap relative z-10 w-full md:w-auto">
-                <button onclick="openParticipantsModal()" class="w-full sm:w-auto px-4 py-2.5 bg-white text-brand-blue hover:bg-slate-100 font-semibold rounded-xl text-sm transition-all shadow flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-users text-brand-orange"></i>
-                    Ver Lista de Convocados (<span id="count-participants">12</span>)
-                </button>
-            </div>
-            <div class="absolute -right-10 -bottom-10 text-white/5 pointer-events-none text-9xl">
-                <i class="fa-solid fa-calendar-check"></i>
-            </div>
-        </div>
-
-        <!-- Cards de KPI -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center justify-between hover:shadow-md transition">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Janela de Horários</p>
-                    <h3 class="text-2xl font-bold text-slate-800 mt-1" id="kpi-total-hours">45h 00m</h3>
-                    <p class="text-xs text-slate-500 mt-1">Disponibilizadas no e-mail</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-blue-50 text-brand-blue flex items-center justify-center text-xl">
-                    <i class="fa-regular fa-clock"></i>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center justify-between hover:shadow-md transition">
-                <div>
-                    <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Slots Livres</p>
-                    <h3 class="text-2xl font-bold text-emerald-600 mt-1" id="kpi-free-slots">--</h3>
-                    <p class="text-xs text-slate-500 mt-1"><span id="kpi-free-hours">--</span> disponíveis</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-circle-check"></i>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center justify-between hover:shadow-md transition">
-                <div>
-                    <p class="text-xs font-semibold text-rose-600 uppercase tracking-wider">Reservado / Ocupado</p>
-                    <h3 class="text-2xl font-bold text-rose-600 mt-1" id="kpi-busy-slots">--</h3>
-                    <p class="text-xs text-slate-500 mt-1">Sincronizado na nuvem</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-user-lock"></i>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center justify-between hover:shadow-md transition">
-                <div>
-                    <p class="text-xs font-semibold text-brand-orange uppercase tracking-wider">Taxa de Ocupação</p>
-                    <h3 class="text-2xl font-bold text-brand-blue mt-1" id="kpi-occupancy-rate">--</h3>
-                    <div class="w-full bg-slate-100 rounded-full h-2 mt-2 w-28 overflow-hidden">
-                        <div id="kpi-bar-occupancy" class="bg-brand-orange h-2 rounded-full" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-orange-50 text-brand-orange flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-chart-pie"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Controles de Filtro e Modos de Visualização -->
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-xl w-full md:w-auto">
-                <button id="view-slots-btn" onclick="switchView('slots')" class="flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-lg transition-all bg-white text-brand-blue shadow">
-                    <i class="fa-solid fa-list-check mr-2"></i> Grade de Horários (Slots)
-                </button>
-                <button id="view-calendar-btn" onclick="switchView('calendar')" class="flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all">
-                    <i class="fa-regular fa-calendar-days mr-2"></i> Calendário Mensal
-                </button>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                <span class="text-xs font-medium text-slate-500 mr-1 hidden lg:inline"><i class="fa-solid fa-filter mr-1"></i>Filtro:</span>
-                <button onclick="filterSlots('all')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-brand-blue text-white transition" data-filter="all">Todos</button>
-                <button onclick="filterSlots('free')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition" data-filter="free">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1"></span> Livres
-                </button>
-                <button onclick="filterSlots('occupied')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition" data-filter="occupied">
-                    <span class="w-2 h-2 rounded-full bg-rose-500 inline-block mr-1"></span> Reservados / Ocupados
-                </button>
-                
-                <button onclick="openBookingModal()" class="ml-auto px-4 py-1.5 bg-brand-orange hover:bg-orange-600 text-white font-medium text-xs rounded-lg shadow transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-plus"></i> Agendar Treinamento
-                </button>
-            </div>
-        </div>
-
-        <!-- PAINEL 1: Grade de Horários -->
-        <div id="slots-view-container" class="space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div class="flex items-center gap-3">
-                        <span class="bg-brand-blue text-white px-3 py-1 rounded-lg text-xs font-bold">JANELA 1</span>
-                        <h3 class="font-bold text-slate-800 text-base">17/11 a 19/11/2026</h3>
-                        <span class="text-xs text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded">(Manhã: 09h00 – 12h00)</span>
-                    </div>
-                    <span class="text-xs text-slate-500 font-medium">Slots de 30 min | 3 Dias disponíveis</span>
-                </div>
-                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6" id="window-1-grid"></div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div class="flex items-center gap-3">
-                        <span class="bg-brand-blue text-white px-3 py-1 rounded-lg text-xs font-bold">JANELA 2</span>
-                        <h3 class="font-bold text-slate-800 text-base">24/11 a 26/11/2026</h3>
-                        <span class="text-xs text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded">(Manhã: 09h-12h | Tarde: 14h-16h)</span>
-                    </div>
-                    <span class="text-xs text-slate-500 font-medium">Slots de 30 min | 3 Dias disponíveis</span>
-                </div>
-                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6" id="window-2-grid"></div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div class="flex items-center gap-3">
-                        <span class="bg-brand-blue text-white px-3 py-1 rounded-lg text-xs font-bold">JANELA 3</span>
-                        <h3 class="font-bold text-slate-800 text-base">02/12 a 04/12/2026</h3>
-                        <span class="text-xs text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded">(Manhã: 09h-12h | Tarde: 14h-16h)</span>
-                    </div>
-                    <span class="text-xs text-slate-500 font-medium">Slots de 30 min | 3 Dias disponíveis</span>
-                </div>
-                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6" id="window-3-grid"></div>
-            </div>
-        </div>
-
-        <!-- PAINEL 2: Calendário Mensal -->
-        <div id="calendar-view-container" class="hidden space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-brand-blue flex items-center gap-2">
-                            <i class="fa-regular fa-calendar"></i> Novembro 2026
-                        </h3>
-                        <span class="text-xs bg-blue-50 text-brand-blue font-semibold px-2.5 py-1 rounded-full">6 Dias de Treinamento</span>
-                    </div>
-                    <div class="grid grid-cols-7 gap-1 text-center font-semibold text-xs text-slate-400 mb-2">
-                        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-                    </div>
-                    <div class="grid grid-cols-7 gap-2 text-sm" id="cal-nov-grid"></div>
-                </div>
-
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-brand-blue flex items-center gap-2">
-                            <i class="fa-regular fa-calendar"></i> Dezembro 2026
-                        </h3>
-                        <span class="text-xs bg-blue-50 text-brand-blue font-semibold px-2.5 py-1 rounded-full">3 Dias de Treinamento</span>
-                    </div>
-                    <div class="grid grid-cols-7 gap-1 text-center font-semibold text-xs text-slate-400 mb-2">
-                        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-                    </div>
-                    <div class="grid grid-cols-7 gap-2 text-sm" id="cal-dec-grid"></div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 mt-auto py-4 text-center text-xs text-slate-500">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
-            <p>1º Treinamento Salesforce &copy; 2026 - PAIM.IA.PROSPECT (Sincronizado na Nuvem)</p>
-            <p class="flex items-center gap-2">
-                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Firebase Online
-            </p>
-        </div>
-    </footer>
-
-    <!-- MODAL: Participantes -->
-    <div id="modal-participants" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
-            <div class="bg-brand-blue text-white px-6 py-4 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-users text-brand-orange text-xl"></i>
-                    <div>
-                        <h3 class="font-bold text-lg leading-snug">Participantes do E-mail</h3>
-                        <p class="text-xs text-slate-300">Convocados e cópias do treinamento</p>
-                    </div>
-                </div>
-                <button onclick="closeParticipantsModal()" class="text-slate-300 hover:text-white text-xl">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
-                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Destinatários Principais (Para)</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="list-para"></div>
-                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-4">Em Cópia (Cc)</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="list-cc"></div>
-            </div>
-            <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 text-right">
-                <button onclick="closeParticipantsModal()" class="px-5 py-2 bg-slate-700 text-white font-medium text-xs rounded-xl">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: Log Completo de Auditoria -->
-    <div id="modal-audit" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-xl w-full overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
-            <div class="bg-brand-blue text-white px-6 py-4 flex items-center justify-between">
-                <h3 class="font-bold text-base flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-brand-orange"></i> Histórico de Alterações na Nuvem
-                </h3>
-                <button onclick="closeAuditModal()" class="text-slate-300 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-3" id="audit-logs-list">
-                <p class="text-xs text-slate-500">Carregando logs...</p>
-            </div>
-            <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 text-right">
-                <button onclick="closeAuditModal()" class="px-5 py-2 bg-slate-700 text-white font-medium text-xs rounded-xl">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: Agendamento -->
-    <div id="modal-booking" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100">
-            <div class="bg-brand-blue text-white px-6 py-4 flex items-center justify-between">
-                <h3 class="font-bold text-base flex items-center gap-2">
-                    <i class="fa-regular fa-calendar-plus text-brand-orange"></i>
-                    <span id="booking-modal-title">Agendar Horário</span>
-                </h3>
-                <button onclick="closeBookingModal()" class="text-slate-300 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <form id="booking-form" onsubmit="handleBookingSubmit(event)" class="p-6 space-y-4">
-                <input type="hidden" id="booking-slot-id">
-
-                <div class="bg-blue-50 border border-blue-100 p-3 rounded-xl text-xs text-brand-blue flex items-center gap-3">
-                    <i class="fa-solid fa-clock text-lg text-brand-orange"></i>
-                    <div>
-                        <p class="font-bold text-slate-800" id="modal-slot-datetime">--</p>
-                        <p class="text-slate-500">Duração: 30 minutos</p>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nome da Equipe / Solicitante *</label>
-                    <input type="text" id="booking-team-name" required placeholder="Ex: Time Sudeste, Time Comercial" class="w-full text-xs p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-blue">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Responsável pelo Agendamento *</label>
-                    <input type="text" id="booking-owner" required placeholder="Ex: Ronaldo Antunes / Rafael Carvalho" class="w-full text-xs p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-blue">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Observações ou Pauta</label>
-                    <textarea id="booking-notes" rows="2" placeholder="Dúvidas específicas..." class="w-full text-xs p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-blue"></textarea>
-                </div>
-
-                <div id="occupied-actions" class="hidden space-y-2 pt-2 border-t border-slate-100">
-                    <button type="button" onclick="releaseSlot()" class="w-full py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold text-xs rounded-xl transition">
-                        <i class="fa-solid fa-trash-can mr-1"></i> Liberar Horário (Desmarcar)
-                    </button>
-                </div>
-
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeBookingModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-xl">Cancelar</button>
-                    <button type="submit" id="save-booking-btn" class="px-5 py-2.5 bg-brand-orange hover:bg-orange-600 text-white font-semibold text-xs rounded-xl shadow">Confirmar Reserva</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Script de Conexão Firebase e Lógica -->
-    <script>
-        // Configuração do Firebase com as suas credenciais
-        const firebaseConfig = {
-            apiKey: "AIzaSyBH4FLWJcXU1g6gU6P3yOcJ2lcGS2Dquyo",
-            authDomain: "treinamento-campos-origem-bsa.firebaseapp.com",
-            projectId: "treinamento-campos-origem-bsa",
-            storageBucket: "treinamento-campos-origem-bsa.firebasestorage.app",
-            messagingSenderId: "1089813369998",
-            appId: "1:1089813369998:web:cc5fcdb236b63c79ace5df",
-            measurementId: "G-S544XYZ434"
-        };
-
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        const participantsPara = [
-            "Rafael Henrique Andrade de Carvalho", "Patrick Casagrande",
-            "Bruna Fernanda Do Prado Ribeiro", "Ronaldo Antunes", "Israel Schimitz dos Santos"
-        ];
-
-        const participantsCc = [
-            "Cristiano Borges Fornari", "Poliana Da Silva Machado", "Lucas Merlo Ben",
-            "Jakson Pires", "Renata Pozza", "Paula Pellegrini", "Dener Paludo"
-        ];
-
-        let scheduleData = [
-            { id: "17-11-0900", dateStr: "2026-11-17", dateDisplay: "Terça, 17/11/2026", timeDisplay: "09:00 - 09:30", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "17-11-0930", dateStr: "2026-11-17", dateDisplay: "Terça, 17/11/2026", timeDisplay: "09:30 - 10:00", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "17-11-1000", dateStr: "2026-11-17", dateDisplay: "Terça, 17/11/2026", timeDisplay: "10:00 - 10:30", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "17-11-1030", dateStr: "2026-11-17", dateDisplay: "Terça, 17/11/2026", timeDisplay: "10:30 - 11:00", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "17-11-1100", dateStr: "2026-11-17", dateDisplay: "Terça, 17/11/2026", timeDisplay: "11:00 - 11:30", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "17-11-1130", dateStr: "2026-11-17", dateDisplay: "Terça, 17/11/2026", timeDisplay: "11:30 - 12:00", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-
-            { id: "18-11-0900", dateStr: "2026-11-18", dateDisplay: "Quarta, 18/11/2026", timeDisplay: "09:00 - 09:30", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "18-11-0930", dateStr: "2026-11-18", dateDisplay: "Quarta, 18/11/2026", timeDisplay: "09:30 - 10:00", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "18-11-1000", dateStr: "2026-11-18", dateDisplay: "Quarta, 18/11/2026", timeDisplay: "10:00 - 10:30", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "18-11-1030", dateStr: "2026-11-18", dateDisplay: "Quarta, 18/11/2026", timeDisplay: "10:30 - 11:00", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "18-11-1100", dateStr: "2026-11-18", dateDisplay: "Quarta, 18/11/2026", timeDisplay: "11:00 - 11:30", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "18-11-1130", dateStr: "2026-11-18", dateDisplay: "Quarta, 18/11/2026", timeDisplay: "11:30 - 12:00", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-
-            // Slot inicial ocupado Time Sudeste
-            { id: "19-11-0900", dateStr: "2026-11-19", dateDisplay: "Quinta, 19/11/2026", timeDisplay: "09:00 - 09:30", window: 1, isOccupied: true, team: "Time Sudeste", owner: "Diogo Paim Gonçalves", notes: "Esta data já foi ocupada pelo time sudeste" },
-            { id: "19-11-0930", dateStr: "2026-11-19", dateDisplay: "Quinta, 19/11/2026", timeDisplay: "09:30 - 10:00", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "19-11-1000", dateStr: "2026-11-19", dateDisplay: "Quinta, 19/11/2026", timeDisplay: "10:00 - 10:30", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "19-11-1030", dateStr: "2026-11-19", dateDisplay: "Quinta, 19/11/2026", timeDisplay: "10:30 - 11:00", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "19-11-1100", dateStr: "2026-11-19", dateDisplay: "Quinta, 19/11/2026", timeDisplay: "11:00 - 11:30", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-            { id: "19-11-1130", dateStr: "2026-11-19", dateDisplay: "Quinta, 19/11/2026", timeDisplay: "11:30 - 12:00", window: 1, isOccupied: false, team: "", owner: "", notes: "" },
-
-            ...generateWindowSlots(["2026-11-24", "2026-11-25", "2026-11-26"], [{day: "Terça", dates: "24/11/2026"}, {day: "Quarta", dates: "25/11/2026"}, {day: "Quinta", dates: "26/11/2026"}], 2),
-            ...generateWindowSlots(["2026-12-02", "2026-12-03", "2026-12-04"], [{day: "Quarta", dates: "02/12/2026"}, {day: "Quinta", dates: "03/12/2026"}, {day: "Sexta", dates: "04/12/2026"}], 3)
-        ];
-
-        function generateWindowSlots(dateStrs, dateDisplays, windowNum) {
-            let slots = [];
-            const timeRanges = ["09:00 - 09:30", "09:30 - 10:00", "10:00 - 10:30", "10:30 - 11:00", "11:00 - 11:30", "11:30 - 12:00", "14:00 - 14:30", "14:30 - 15:00", "15:00 - 15:30", "15:30 - 16:00"];
-            dateStrs.forEach((dateStr, idx) => {
-                const info = dateDisplays[idx];
-                timeRanges.forEach((tr, tIdx) => {
-                    slots.push({ id: `w${windowNum}-${dateStr.substr(8,2)}-${tIdx}`, dateStr: dateStr, dateDisplay: `${info.day}, ${info.dates}`, timeDisplay: tr, window: windowNum, isOccupied: false, team: "", owner: "", notes: "" });
-                });
-            });
-            return slots;
-        }
-
-        let currentFilter = 'all';
-        let auditLogs = [];
-
-        window.onload = function() {
-            renderParticipants();
-            initRealtimeSync();
-        }
-
-        // Sincronização em Tempo Real com Firestore
-        function initRealtimeSync() {
-            db.collection("agendamentos").onSnapshot((snapshot) => {
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const index = scheduleData.findIndex(s => s.id === doc.id);
-                    if (index !== -1) {
-                        scheduleData[index] = { ...scheduleData[index], ...data };
-                    }
-                });
-                renderGridSlots();
-                renderCalendars();
-                updateKPIs();
-            });
-
-            // Sincronizar Logs de Auditoria
-            db.collection("logs").orderBy("timestamp", "desc").limit(10).onSnapshot((snapshot) => {
-                auditLogs = [];
-                snapshot.forEach((doc) => {
-                    auditLogs.push(doc.data());
-                });
-                updateAuditUI();
-            });
-        }
-
-        function updateAuditUI() {
-            const lastText = document.getElementById('last-update-text');
-            const listContainer = document.getElementById('audit-logs-list');
-
-            if (auditLogs.length > 0) {
-                const latest = auditLogs[0];
-                const dateFormatted = latest.timestamp ? new Date(latest.timestamp.toDate ? latest.timestamp.toDate() : latest.timestamp).toLocaleString('pt-BR') : 'Recentemente';
-                lastText.innerHTML = `<strong>${latest.owner}</strong> (${latest.team}) alterou o slot <strong>${latest.slot}</strong> em ${dateFormatted}`;
-                
-                listContainer.innerHTML = auditLogs.map(log => {
-                    const dt = log.timestamp ? new Date(log.timestamp.toDate ? log.timestamp.toDate() : log.timestamp).toLocaleString('pt-BR') : '';
-                    return `
-                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
-                            <div class="flex justify-between font-bold text-brand-blue">
-                                <span>${log.action === 'book' ? '📅 Reserva' : '🗑️ Liberação'} - ${log.slot}</span>
-                                <span class="text-slate-400 font-normal">${dt}</span>
-                            </div>
-                            <p class="text-slate-700"><strong>Equipe:</strong> ${log.team} | <strong>Responsável:</strong> ${log.owner}</p>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                lastText.innerText = "Nenhuma alteração registrada recentemente.";
-                listContainer.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Nenhum registro no histórico.</p>';
-            }
-        }
-
-        function renderParticipants() {
-            document.getElementById('list-para').innerHTML = participantsPara.map(p => `
-                <div class="flex items-center gap-2 text-xs p-2.5 rounded-xl bg-slate-100 border border-slate-200">
-                    <span class="w-6 h-6 rounded-full bg-brand-blue text-white flex items-center justify-center font-bold text-[10px]">${p.split(' ').map(n=>n[0]).slice(0,2).join('')}</span>
-                    <span class="font-medium text-slate-800">${p}</span>
-                </div>
-            `).join('');
-
-            document.getElementById('list-cc').innerHTML = participantsCc.map(p => `
-                <div class="flex items-center gap-2 text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600">
-                    <span class="w-6 h-6 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center font-bold text-[10px]">${p.split(' ').map(n=>n[0]).slice(0,2).join('')}</span>
-                    <span>${p}</span>
-                </div>
-            `).join('');
-
-            document.getElementById('count-participants').innerText = participantsPara.length + participantsCc.length;
-        }
-
-        function renderGridSlots() {
-            document.getElementById('window-1-grid').innerHTML = buildWindowHTML(1);
-            document.getElementById('window-2-grid').innerHTML = buildWindowHTML(2);
-            document.getElementById('window-3-grid').innerHTML = buildWindowHTML(3);
-        }
-
-        function buildWindowHTML(windowNum) {
-            const windowSlots = scheduleData.filter(s => s.window === windowNum);
-            const dates = [...new Set(windowSlots.map(s => s.dateDisplay))];
-            
-            return dates.map(dDisplay => {
-                const slotsForDay = windowSlots.filter(s => s.dateDisplay === dDisplay);
-                return `
-                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80 flex flex-col justify-between">
-                        <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
-                            <span class="font-bold text-slate-700 text-sm">${dDisplay}</span>
-                            <span class="text-[11px] font-semibold text-slate-400 bg-white px-2 py-0.5 rounded border">${slotsForDay.filter(s=>!s.isOccupied).length} vagas</span>
-                        </div>
-                        <div class="space-y-2 max-h-80 overflow-y-auto custom-scrollbar pr-1">
-                            ${slotsForDay.map(slot => {
-                                if (currentFilter === 'free' && slot.isOccupied) return '';
-                                if (currentFilter === 'occupied' && !slot.isOccupied) return '';
-
-                                if (slot.isOccupied) {
-                                    return `
-                                        <div onclick="openBookingModal('${slot.id}')" class="p-3 rounded-xl border border-rose-200 bg-rose-50/80 hover:bg-rose-100 transition cursor-pointer flex items-center justify-between group">
-                                            <div>
-                                                <div class="flex items-center gap-1.5 text-xs font-bold text-rose-700">
-                                                    <i class="fa-solid fa-lock text-rose-500"></i> ${slot.timeDisplay}
-                                                </div>
-                                                <p class="text-xs font-semibold text-slate-800 mt-1">${slot.team}</p>
-                                                <p class="text-[10px] text-slate-500">${slot.owner}</p>
-                                            </div>
-                                            <span class="text-[10px] bg-rose-200 text-rose-800 font-bold px-2 py-1 rounded-md">Ocupado</span>
-                                        </div>
-                                    `;
-                                } else {
-                                    return `
-                                        <div onclick="openBookingModal('${slot.id}')" class="p-2.5 rounded-xl border border-emerald-200/60 bg-emerald-50/40 hover:bg-emerald-100/60 transition cursor-pointer flex items-center justify-between group">
-                                            <div class="flex items-center gap-2">
-                                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                                <span class="text-xs font-medium text-slate-700">${slot.timeDisplay}</span>
-                                            </div>
-                                            <span class="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-md">Livre +</span>
-                                        </div>
-                                    `;
-                                }
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderCalendars() {
-            const novGrid = document.getElementById('cal-nov-grid');
-            let novHtml = '';
-            for(let day=1; day<=30; day++) {
-                const dateStr = `2026-11-${day < 10 ? '0'+day : day}`;
-                const slotsOnDay = scheduleData.filter(s => s.dateStr === dateStr);
-                const hasSlots = slotsOnDay.length > 0;
-                const hasOccupied = slotsOnDay.some(s => s.isOccupied);
-                let cellClass = "p-2 rounded-xl h-16 flex flex-col justify-between border text-left transition ";
-                cellClass += hasSlots ? (hasOccupied ? "bg-rose-50 border-rose-200 text-rose-900 cursor-pointer" : "bg-emerald-50 border-emerald-200 text-emerald-900 cursor-pointer") : "bg-slate-50 border-slate-100 text-slate-400 opacity-60";
-
-                novHtml += `
-                    <div class="${cellClass}">
-                        <span class="font-bold text-xs">${day}</span>
-                        ${hasSlots ? `<div class="text-[9px]">${hasOccupied ? `<span class="bg-rose-200 text-rose-800 font-bold px-1 py-0.5 rounded block text-center">Ocup</span>` : `<span class="bg-emerald-200 text-emerald-800 font-bold px-1 py-0.5 rounded block text-center">${slotsOnDay.length} vagas</span>`}</div>` : ''}
-                    </div>
-                `;
-            }
-            novGrid.innerHTML = novHtml;
-
-            const decGrid = document.getElementById('cal-dec-grid');
-            let decHtml = '<div class="p-2"></div><div class="p-2"></div>';
-            for(let day=1; day<=31; day++) {
-                const dateStr = `2026-12-${day < 10 ? '0'+day : day}`;
-                const slotsOnDay = scheduleData.filter(s => s.dateStr === dateStr);
-                const hasSlots = slotsOnDay.length > 0;
-                const hasOccupied = slotsOnDay.some(s => s.isOccupied);
-                let cellClass = "p-2 rounded-xl h-16 flex flex-col justify-between border text-left transition ";
-                cellClass += hasSlots ? (hasOccupied ? "bg-rose-50 border-rose-200 text-rose-900 cursor-pointer" : "bg-emerald-50 border-emerald-200 text-emerald-900 cursor-pointer") : "bg-slate-50 border-slate-100 text-slate-400 opacity-60";
-
-                decHtml += `
-                    <div class="${cellClass}">
-                        <span class="font-bold text-xs">${day}</span>
-                        ${hasSlots ? `<div class="text-[9px]">${hasOccupied ? `<span class="bg-rose-200 text-rose-800 font-bold px-1 py-0.5 rounded block text-center">Ocup</span>` : `<span class="bg-emerald-200 text-emerald-800 font-bold px-1 py-0.5 rounded block text-center">${slotsOnDay.length} vagas</span>`}</div>` : ''}
-                    </div>
-                `;
-            }
-            decGrid.innerHTML = decHtml;
-        }
-
-        function updateKPIs() {
-            const totalSlots = scheduleData.length;
-            const occupiedSlots = scheduleData.filter(s => s.isOccupied).length;
-            const freeSlots = totalSlots - occupiedSlots;
-            const occupancyRate = ((occupiedSlots / totalSlots) * 100).toFixed(1);
-
-            document.getElementById('kpi-free-slots').innerText = `${freeSlots} Slots`;
-            document.getElementById('kpi-free-hours').innerText = `${(freeSlots * 0.5).toFixed(1)}h`;
-            document.getElementById('kpi-busy-slots').innerText = `${occupiedSlots} Slots`;
-            document.getElementById('kpi-occupancy-rate').innerText = `${occupancyRate}%`;
-            document.getElementById('kpi-bar-occupancy').style.width = `${occupancyRate}%`;
-        }
-
-        function switchView(view) {
-            const slotsContainer = document.getElementById('slots-view-container');
-            const calendarContainer = document.getElementById('calendar-view-container');
-            if(view === 'slots') {
-                slotsContainer.classList.remove('hidden');
-                calendarContainer.classList.add('hidden');
-            } else {
-                slotsContainer.classList.add('hidden');
-                calendarContainer.classList.remove('hidden');
-            }
-        }
-
-        function filterSlots(type) {
-            currentFilter = type;
-            renderGridSlots();
-        }
-
-        function openBookingModal(slotId = null) {
-            const slot = scheduleData.find(s => s.id === slotId) || scheduleData[0];
-            document.getElementById('booking-slot-id').value = slot.id;
-            document.getElementById('modal-slot-datetime').innerText = `${slot.dateDisplay} às ${slot.timeDisplay}`;
-            
-            if(slot.isOccupied) {
-                document.getElementById('booking-modal-title').innerText = "Detalhes do Agendamento";
-                document.getElementById('booking-team-name').value = slot.team;
-                document.getElementById('booking-owner').value = slot.owner;
-                document.getElementById('booking-notes').value = slot.notes;
-                document.getElementById('occupied-actions').classList.remove('hidden');
-                document.getElementById('save-booking-btn').innerText = "Atualizar Reserva";
-            } else {
-                document.getElementById('booking-modal-title').innerText = "Agendar Treinamento";
-                document.getElementById('booking-team-name').value = "";
-                document.getElementById('booking-owner').value = "";
-                document.getElementById('booking-notes').value = "";
-                document.getElementById('occupied-actions').classList.add('hidden');
-                document.getElementById('save-booking-btn').innerText = "Confirmar Reserva";
-            }
-            document.getElementById('modal-booking').classList.remove('hidden');
-        }
-
-        function closeBookingModal() { document.getElementById('modal-booking').classList.add('hidden'); }
-        function openParticipantsModal() { document.getElementById('modal-participants').classList.remove('hidden'); }
-        function closeParticipantsModal() { document.getElementById('modal-participants').classList.add('hidden'); }
-        function openAuditModal() { document.getElementById('modal-audit').classList.remove('hidden'); }
-        function closeAuditModal() { document.getElementById('modal-audit').classList.add('hidden'); }
-
-        // Gravação na Nuvem (Firebase)
-        function handleBookingSubmit(event) {
-            event.preventDefault();
-            const slotId = document.getElementById('booking-slot-id').value;
-            const team = document.getElementById('booking-team-name').value;
-            const owner = document.getElementById('booking-owner').value;
-            const notes = document.getElementById('booking-notes').value;
-            const slotObj = scheduleData.find(s => s.id === slotId);
-
-            const payload = {
-                isOccupied: true,
-                team: team,
-                owner: owner,
-                notes: notes,
-                updatedAt: new Date().toISOString()
-            };
-
-            db.collection("agendamentos").doc(slotId).set(payload, { merge: true }).then(() => {
-                // Registrar log de auditoria
-                db.collection("logs").add({
-                    action: 'book',
-                    slot: `${slotObj.dateDisplay} (${slotObj.timeDisplay})`,
-                    team: team,
-                    owner: owner,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                closeBookingModal();
-            });
-        }
-
-        function releaseSlot() {
-            const slotId = document.getElementById('booking-slot-id').value;
-            const slotObj = scheduleData.find(s => s.id === slotId);
-            const payload = {
-                isOccupied: false,
-                team: "",
-                owner: "",
-                notes: "",
-                updatedAt: new Date().toISOString()
-            };
-
-            db.collection("agendamentos").doc(slotId).set(payload, { merge: true }).then(() => {
-                db.collection("logs").add({
-                    action: 'release',
-                    slot: `${slotObj.dateDisplay} (${slotObj.timeDisplay})`,
-                    team: 'Liberado',
-                    owner: 'Sistema / Diogo',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                closeBookingModal();
-            });
-        }
-    </script>
+<body><div class="pg2" id="pg2"><aside class="mx-side" aria-hidden="true"><canvas id="mxL"></canvas></aside><div class="wrap">
+<div class="holo-wrap"><header class="holo-hero" id="hero">
+  <span class="holo-grid" aria-hidden="true"></span><span class="holo-scan" aria-hidden="true"></span>
+  <span class="hud tl" aria-hidden="true"></span><span class="hud tr" aria-hidden="true"></span><span class="hud bl" aria-hidden="true"></span><span class="hud br" aria-hidden="true"></span>
+  <div class="holo-inner">
+    <div class="holo-eyebrow"><span class="dot"></span>Bertolini BSA · Novos Negócios · Inteligência competitiva</div>
+    <h1 class="holo-title">BENCHMARKING <span>/ Movimentos dos concorrentes em sistemas de armazenagem</span></h1>
+    <div class="holo-sub">Gerado em 18/11/2026 · 15 movimentos · fontes públicas com link · Paim Business Intelligence</div>
+    <div class="holo-term" aria-hidden="true"><span class="p">time-comercial@bsa:~$</span>benchmarking --gerado 18/11/2026 --itens 15 <span class="cur">▍</span></div>
+    <div class="conf">Uso interno do time comercial. Não encaminhar a clientes. Cada item separa FATO (publicado na fonte), HIPÓTESE e RECOMENDAÇÃO. As notícias recentes se atualizam sozinhas a cada abertura. Toque em <b>MAPA</b> (canto superior direito) para ver os projetos no mapa.</div>
+  </div>
+</header></div>
+<section class="kpis">
+  <div class="kpi"><span class="muted">Movimentos</span><b>15</b></div>
+  <div class="kpi"><span class="muted">Últimos 90 dias</span><b>7</b><span class="muted">7 de 15</span></div>
+  <div class="kpi"><span class="muted">Brasil</span><b>7</b><span class="muted">7 de 15</span></div>
+  <div class="kpi"><span class="muted">Concorrentes</span><b>6</b></div>
+</section>
+<section class="panel"><h2>Filtrar</h2><div class="filters">
+  <select id="fc" aria-label="Concorrente"><option value="">Todos os concorrentes</option><option>Grupo Águia</option><option>KION (Dematic / STILL)</option><option>Mecalux</option><option>SSI Schaefer</option><option>Scheffer + Longa Industrial</option><option>Águia Sistemas</option></select>
+  <select id="fr" aria-label="Região"><option value="">Todas as regiões</option><option>América Latina</option><option>Brasil</option><option>Exterior</option><option>Não identificado</option></select>
+</div></section>
+<section class="panel"><h2>Notícias recentes do mercado <span class="nw-status" id="nwStatus"></span></h2><p class="muted" style="margin:-6px 0 8px">Atualizadas automaticamente a cada abertura (últimos 30 dias, Google Notícias). Não verificadas: confira na matéria.</p><div id="nwList"><p class="muted">Carregando…</p></div></section>
+<section class="panel"><h2>Movimentos (mais recentes no topo)</h2><div id="list"><article class="card" data-comp="SSI Schaefer" data-reg="Exterior">
+  <div class="main"><h3><span class="chip">SSI Schaefer</span>adidas escolhe SSI Schaefer para armazenagem automática de caixas nos EUA</h3>
+  <p class="meta">Projeto em cliente · Spartanburg, EUA · Exterior · 16/10/2026 · SSI Schaefer (newsroom)</p>
+  <p><span class="ev f">FATO</span> A SSI Schaefer anunciou o fornecimento de um armazém automático de caixas para calçados da adidas em Spartanburg, com 22 transelevadores miniload e mais de 300 mil posições.</p>
+  <p><span class="ev h">HIPÓTESE</span> O mercado de varejo de moda está migrando o armazenamento de caixas para miniload; estrutura convencional fica restrita a pulmão e paletes.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Em contas de moda e calçados no Brasil, posicionar porta-paletes e mezanino como complemento a projetos de automação, não como concorrente deles.</p>
+  <p><a href="https://www.ssi-schaefer.com/en-us/newsroom/news" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>adidas</b><div>Segmento: Vestuário e calçados</div><div>Solução: Miniload (22 transelevadores), transportadores e software WAMAS</div><div>Números: 22 miniloads · mais de 300 mil posições de caixa</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Miniload"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 112V10M90 112V10M130 112V10M200 112V10M20 30h70M20 50h70M20 70h70M20 90h70M130 30h70M130 50h70M130 70h70M130 90h70M110 112V12"/></g><rect x="26" y="18" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="26" y="38" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="26" y="58" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="26" y="78" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="50" y="18" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="50" y="38" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="50" y="58" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="50" y="78" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="64" y="18" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="64" y="38" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="64" y="58" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="64" y="78" width="16" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="136" y="18" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="136" y="38" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="136" y="58" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="136" y="78" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="160" y="18" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="160" y="38" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="160" y="58" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="160" y="78" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="180" y="18" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="180" y="38" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="180" y="58" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="180" y="78" width="14" height="10" rx="1" fill="rgba(0,180,216,.35)" stroke="#00B4D8"/><rect x="102" y="44" width="16" height="12" fill="#00FFC4" opacity=".85"/></svg><figcaption>Ilustração esquemática: miniload para caixas. Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-n">NÃO ESTIMADO</span> CAPEX</div><div class="pc-m">Motivo: não encontramos referência pública confiável de custo por posição de miniload (caixas).</div><div class="pc-links"><a href="https://www.ssi-schaefer.com/en-us/newsroom/news" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=SSI%20Schaefer%20adidas%20miniload%20para%20caixas" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="Mecalux" data-reg="Exterior">
+  <div class="main"><h3><span class="chip">Mecalux</span>PepsiCo terá terceiro armazém automático da Mecalux na Polônia</h3>
+  <p class="meta">Projeto em cliente · Michrów, Polônia · Exterior · 09/10/2026 · Mecalux (notícias)</p>
+  <p><span class="ev f">FATO</span> A Mecalux informou que a PepsiCo está construindo um novo armazém automático em Michrów, o terceiro da cliente automatizado pela Mecalux no país.</p>
+  <p><span class="ev h">HIPÓTESE</span> Contas globais de alimentos e bebidas tendem a repetir o fornecedor de automação entre unidades; o relacionamento corporativo pesa tanto quanto o preço.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Mapear unidades brasileiras de multinacionais de bebidas e alimentos e verificar quem é o fornecedor atual de armazenagem.</p>
+  <p><a href="https://www.mecalux.com.br/empresa/noticias" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>PepsiCo</b><div>Segmento: Alimentos e bebidas</div><div>Solução: Armazém automático com 6 transelevadores, transportadores e Easy WMS</div><div>Números: 6 transelevadores</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Armazém automático"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 112V10M62 112V10M104 112V10M152 112V10M200 112V10M14 34h48M14 58h48M14 82h48M104 34h48M104 58h48M104 82h48M152 34h48M152 58h48M152 82h48M83 112V12"/></g><rect x="20" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="20" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="20" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="20" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="38" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="38" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="38" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="38" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="110" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="110" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="110" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="158" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="158" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="158" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="176" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="176" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="176" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="74" y="58" width="18" height="12" fill="#00FFC4" opacity=".85"/></svg><figcaption>Ilustração esquemática: armazém automático de paletes (transelevadores). Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-n">NÃO ESTIMADO</span> CAPEX</div><div class="pc-m">Motivo: a fonte informa 6 transelevadores, mas não a quantidade de posições.</div><div class="pc-links"><a href="https://www.mecalux.com.br/empresa/noticias" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=Mecalux%20PepsiCo%20armaz%C3%A9m%20autom%C3%A1tico%20de%20paletes%20(transelevadores)" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="Mecalux" data-reg="Não identificado">
+  <div class="main"><h3><span class="chip">Mecalux</span>Clavo Food Factory dobra capacidade com 4-Way Pallet Shuttle</h3>
+  <p class="meta">Projeto em cliente · Não identificado na fonte · Não identificado · 29/09/2026 · Mecalux Chile (vídeos)</p>
+  <p><span class="ev f">FATO</span> Vídeo da Mecalux mostra que a Clavo Food Factory dobrou a capacidade de armazenagem com o sistema 4-Way Pallet Shuttle.</p>
+  <p><span class="ev h">HIPÓTESE</span> Shuttle de 4 direções virou o carro-chefe da Mecalux para alimentos, onde a densidade importa mais que a seletividade.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Ter argumento técnico e de custo total para drive-in, push-back e porta-paletes de alta densidade frente ao shuttle em clientes de alimentos.</p>
+  <p><a href="https://www.mecalux.cl/" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>Clavo Food Factory</b><div>Segmento: Alimentos</div><div>Solução: 4-Way Pallet Shuttle (alta densidade)</div><div>Números: Capacidade duplicada</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Pallet shuttle"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 20h192M14 50h192M14 80h192M14 110h192M14 20v90M206 20v90"/></g><rect x="24" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="24" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="50" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="50" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="76" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="76" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="102" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="102" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="24" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="50" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="76" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="92" width="26" height="12" rx="3" fill="#00FFC4" opacity=".85"/><g stroke="#00FFC4" stroke-width="2" fill="none"><path d="M182 98h16M192 92l6 6-6 6M163 88v-8M159 84l4-6 4 6"/></g></svg><figcaption>Ilustração esquemática: pallet shuttle / 4-Way (alta densidade). Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-n">NÃO ESTIMADO</span> CAPEX</div><div class="pc-m">Motivo: a fonte não informa a quantidade de posições.</div><div class="pc-links"><a href="https://www.mecalux.cl/" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=Mecalux%20Clavo%20Food%20Factory%20pallet%20shuttle%20%2F%204-Way%20(alta%20densidade)" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="Águia Sistemas" data-reg="Brasil">
+  <div class="main"><h3><span class="chip">Águia Sistemas</span>Águia leva robôs de triagem à INTRA-LOG Expo 2026</h3>
+  <p class="meta">Lançamento / feira · São Paulo (SP) · Brasil · 15/09/2026 · Tecnologística</p>
+  <p><span class="ev f">FATO</span> Na INTRA-LOG 2026, a Águia demonstrou robôs de triagem da chinesa Libiao, que distribui no Brasil, junto com seu portfólio de estruturas e separação de pedidos.</p>
+  <p><span class="ev h">HIPÓTESE</span> O principal concorrente nacional está se posicionando como integrador completo (estrutura + robótica + software), não só como fabricante de estruturas.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Definir o posicionamento da BSA frente ao “integrador completo”: especialização e prazo em estruturas, ou parcerias formais de automação.</p>
+  <p><a href="https://www.tecnologistica.com.br/noticias/evento/21897/aguia-sistemas-apresenta-solucoes-de-intralogistica-e-automacao-na-intra-log-expo-2026" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>Sem cliente específico</b><div>Segmento: E-commerce e varejo</div><div>Solução: Robôs de triagem T-Sort e 3D Sort (Libiao Robotics, representados pela Águia), além de porta-paletes, autoportante, dinâmico, mezanino, flow rack e pick to light</div><div>Números: Evento de 15 a 17/09/2026</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Robôs móveis"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 108h200"/><rect x="24" y="78" width="46" height="22" rx="5"/><rect x="92" y="78" width="46" height="22" rx="5"/><rect x="160" y="78" width="40" height="22" rx="5"/><circle cx="34" cy="102" r="4"/><circle cx="60" cy="102" r="4"/><circle cx="102" cy="102" r="4"/><circle cx="128" cy="102" r="4"/><circle cx="168" cy="102" r="4"/><circle cx="192" cy="102" r="4"/></g><rect x="32" y="60" width="30" height="18" fill="rgba(242,169,59,.35)" stroke="#F2A93B"/><rect x="100" y="54" width="30" height="24" fill="rgba(242,169,59,.35)" stroke="#F2A93B"/><g stroke="#00FFC4" stroke-width="1.5" fill="none" opacity=".8"><path d="M70 90h22M138 90h22M30 30q80-30 160 0" stroke-dasharray="4 4"/></g></svg><figcaption>Ilustração esquemática: robôs móveis e automação de pequenas cargas. Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-n">NÃO ESTIMADO</span> CAPEX</div><div class="pc-m">Motivo: lançamento em feira, sem projeto de cliente.</div><div class="pc-links"><a href="https://www.tecnologistica.com.br/noticias/evento/21897/aguia-sistemas-apresenta-solucoes-de-intralogistica-e-automacao-na-intra-log-expo-2026" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=%C3%81guia%20Sistemas%20%20rob%C3%B4s%20m%C3%B3veis%20e%20automa%C3%A7%C3%A3o%20de%20pequenas%20cargas" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="Scheffer + Longa Industrial" data-reg="Brasil">
+  <div class="main"><h3><span class="chip">Scheffer + Longa Industrial</span>Sistema 4-Way apresentado na INTRA-LOG 2026</h3>
+  <p class="meta">Lançamento / feira · São Paulo (SP) · Brasil · 15/09/2026 · Portal Logweb</p>
+  <p><span class="ev f">FATO</span> A Scheffer Logística e Automação apresentou na feira um sistema 4-Way em parceria com a Longa Industrial, responsável pela engenharia e fabricação das estruturas.</p>
+  <p><span class="ev h">HIPÓTESE</span> Fabricantes nacionais de estrutura estão se associando a integradores para oferecer alta densidade automatizada; o modelo de parceria é replicável.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Avaliar uma parceria equivalente (estrutura BSA + integrador de shuttle) antes que os clientes peçam essa combinação em concorrência.</p>
+  <p><a href="https://logweb.com.br/intra-log-2026-tecnologias-automacao-intralogistica/" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>Sem cliente específico</b><div>Segmento: Multissetorial</div><div>Solução: Carros 4-Way que movem paletes em quatro direções dentro da estrutura; estruturas fabricadas pela Longa Industrial</div><div>Números: Não identificado</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Pallet shuttle"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 20h192M14 50h192M14 80h192M14 110h192M14 20v90M206 20v90"/></g><rect x="24" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="24" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="50" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="50" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="76" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="76" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="102" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="102" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="24" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="50" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="76" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="92" width="26" height="12" rx="3" fill="#00FFC4" opacity=".85"/><g stroke="#00FFC4" stroke-width="2" fill="none"><path d="M182 98h16M192 92l6 6-6 6M163 88v-8M159 84l4-6 4 6"/></g></svg><figcaption>Ilustração esquemática: pallet shuttle / 4-Way (alta densidade). Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-n">NÃO ESTIMADO</span> CAPEX</div><div class="pc-m">Motivo: lançamento em feira, sem projeto de cliente.</div><div class="pc-links"><a href="https://logweb.com.br/intra-log-2026-tecnologias-automacao-intralogistica/" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=Scheffer%20%2B%20Longa%20Industrial%20%20pallet%20shuttle%20%2F%204-Way%20(alta%20densidade)" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="KION (Dematic / STILL)" data-reg="Brasil">
+  <div class="main"><h3><span class="chip">KION (Dematic / STILL)</span>Dematic demonstra armazém inteligente de paletes de alta densidade</h3>
+  <p class="meta">Lançamento / feira · São Paulo (SP) · Brasil · 15/09/2026 · Portal Logweb</p>
+  <p><span class="ev f">FATO</span> A KION South America integrou equipamentos, automação e software no estande, com demonstração da Dematic de armazenagem automática de paletes.</p>
+  <p><span class="ev h">HIPÓTESE</span> Grupos globais de movimentação chegam ao cliente pelo equipamento (empilhadeira) e ampliam para automação de estrutura.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Monitorar contas onde STILL/Linde/Jungheinrich já atendem a frota: são porta de entrada para projetos de automação concorrentes.</p>
+  <p><a href="https://logweb.com.br/intra-log-2026-automacao-ia-intralogistica/" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>Sem cliente específico</b><div>Segmento: Multissetorial</div><div>Solução: Armazenagem automática de paletes em estrutura de alta densidade; empilhadeira retrátil STILL FM-X</div><div>Números: Não identificado</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Armazém automático"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 112V10M62 112V10M104 112V10M152 112V10M200 112V10M14 34h48M14 58h48M14 82h48M104 34h48M104 58h48M104 82h48M152 34h48M152 58h48M152 82h48M83 112V12"/></g><rect x="20" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="20" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="20" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="20" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="38" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="38" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="38" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="38" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="110" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="110" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="110" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="158" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="158" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="158" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="176" y="20" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="176" y="44" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="176" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="74" y="58" width="18" height="12" fill="#00FFC4" opacity=".85"/></svg><figcaption>Ilustração esquemática: armazém automático de paletes (transelevadores). Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-n">NÃO ESTIMADO</span> CAPEX</div><div class="pc-m">Motivo: demonstração em feira, sem projeto de cliente.</div><div class="pc-links"><a href="https://logweb.com.br/intra-log-2026-automacao-ia-intralogistica/" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=KION%20%20armaz%C3%A9m%20autom%C3%A1tico%20de%20paletes%20(transelevadores)" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="Mecalux" data-reg="Não identificado">
+  <div class="main"><h3><span class="chip">Mecalux</span>Frigo Logistics: autoportante para 15 mil paletes a -24 °C</h3>
+  <p class="meta">Projeto em cliente · Não identificado na fonte · Não identificado · 15/09/2026 · Mecalux Chile (vídeos)</p>
+  <p><span class="ev f">FATO</span> A Mecalux divulgou um armazém autoportante para 15 mil paletes em temperatura de -24 °C para a Frigo Logistics.</p>
+  <p><span class="ev h">HIPÓTESE</span> Frio é o nicho em que o autoportante mais cresce, porque reduz o volume refrigerado por palete.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Incluir frigoríficos e operadores de frio como segmento prioritário no Radar e preparar referência técnica para câmaras frias.</p>
+  <p><a href="https://www.mecalux.cl/" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>Frigo Logistics</b><div>Segmento: Logística frigorificada</div><div>Solução: Armazém autoportante (clad-rack) para congelados</div><div>Números: 15.000 paletes · -24 °C</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Autoportante"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 112V26L110 8l96 18v86M14 112h192"/><path d="M40 106V40M76 106V36M144 106V36M180 106V40M40 62h36M40 84h36M144 62h36M144 84h36" opacity=".8"/><path d="M110 104V28M100 104h20M104 60h12"/></g><rect x="46" y="46" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="46" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="46" y="90" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="46" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="90" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="102" y="52" width="16" height="10" fill="#00B4D8" opacity=".8"/></svg><figcaption>Ilustração esquemática: armazém autoportante (clad-rack) com transelevador. Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-e">ESTIMATIVA</span> CAPEX do sistema de armazenagem</div><div class="pc-v">US$ 4,5 mi a US$ 12 mi</div><div class="pc-m">Cálculo: 15.000 posições × US$ 300 a 800 por posição (AS/RS de paletes instalado). Referência pública: <a href="https://goasrs.com/pallet-asrs-systems-guide/" target="_blank" rel="noopener">GoASRS (guia de custos de AS/RS de paletes)</a>. Não inclui prédio nem refrigeração. Câmara a -24 °C tende ao topo da faixa (HIPÓTESE). Ordem de grandeza, não valor do contrato.</div><div class="pc-links"><a href="https://www.mecalux.cl/" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=Mecalux%20Frigo%20Logistics%20armaz%C3%A9m%20autoportante%20(clad-rack)%20com%20transelevador" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="Mecalux" data-reg="Exterior">
+  <div class="main"><h3><span class="chip">Mecalux</span>GBS (cerveja) adota 4-Way Pallet Shuttle na França</h3>
+  <p class="meta">Projeto em cliente · Billy-Berclau, França · Exterior · 22/06/2026 · Mecalux (notícias)</p>
+  <p><span class="ev f">FATO</span> O novo armazém da GBS em Billy-Berclau usará o 4-Way Pallet Shuttle e o software Easy WMS da Mecalux.</p>
+  <p><span class="ev h">HIPÓTESE</span> Bebidas é o segmento em que alta densidade automatizada substitui drive-in; o mesmo movimento pode chegar às cervejarias brasileiras.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Acompanhar expansões de cervejarias no Radar e abordar cedo, na fase de layout.</p>
+  <p><a href="https://www.mecalux.com.br/empresa/noticias" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>GBS</b><div>Segmento: Bebidas (cerveja)</div><div>Solução: 4-Way Pallet Shuttle e Easy WMS</div><div>Números: Não identificado</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Pallet shuttle"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 20h192M14 50h192M14 80h192M14 110h192M14 20v90M206 20v90"/></g><rect x="24" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="24" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="50" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="50" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="76" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="76" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="102" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="102" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="32" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="128" y="62" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="24" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="50" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="76" y="92" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="92" width="26" height="12" rx="3" fill="#00FFC4" opacity=".85"/><g stroke="#00FFC4" stroke-width="2" fill="none"><path d="M182 98h16M192 92l6 6-6 6M163 88v-8M159 84l4-6 4 6"/></g></svg><figcaption>Ilustração esquemática: pallet shuttle / 4-Way (alta densidade). Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-n">NÃO ESTIMADO</span> CAPEX</div><div class="pc-m">Motivo: a fonte não informa a quantidade de posições.</div><div class="pc-links"><a href="https://www.mecalux.com.br/empresa/noticias" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=Mecalux%20GBS%20pallet%20shuttle%20%2F%204-Way%20(alta%20densidade)" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="Mecalux" data-reg="América Latina">
+  <div class="main"><h3><span class="chip">Mecalux</span>Mecalux acelera automação com AMRs no México</h3>
+  <p class="meta">Estratégia / mercado · Cidade do México, México · América Latina · 06/04/2026 · México Industry</p>
+  <p><span class="ev f">FATO</span> Segundo o diretor da Mecalux no México, a alta do salário mínimo e a possível redução da jornada aceleraram a demanda por automação de armazéns no país.</p>
+  <p><span class="ev h">HIPÓTESE</span> O argumento de custo de mão de obra deve chegar aos clientes brasileiros; a automação passa a competir com a expansão física de estrutura.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Preparar comparativo de custo total (estrutura + operação) para responder ao argumento “automatize em vez de ampliar”.</p>
+  <p><a href="https://mexicoindustry.com/noticia/mecalux-impulsa-robots-amr-para-transformar-la-operacion-de-almacenes" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>Sem cliente específico</b><div>Segmento: Multissetorial</div><div>Solução: Robôs móveis autônomos (AMR), armazenagem automática e Easy WMS</div><div>Números: Não identificado</div><div>Pessoas citadas: Lluis Fuster (Diretor da Mecalux México e América Central)</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Robôs móveis"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 108h200"/><rect x="24" y="78" width="46" height="22" rx="5"/><rect x="92" y="78" width="46" height="22" rx="5"/><rect x="160" y="78" width="40" height="22" rx="5"/><circle cx="34" cy="102" r="4"/><circle cx="60" cy="102" r="4"/><circle cx="102" cy="102" r="4"/><circle cx="128" cy="102" r="4"/><circle cx="168" cy="102" r="4"/><circle cx="192" cy="102" r="4"/></g><rect x="32" y="60" width="30" height="18" fill="rgba(242,169,59,.35)" stroke="#F2A93B"/><rect x="100" y="54" width="30" height="24" fill="rgba(242,169,59,.35)" stroke="#F2A93B"/><g stroke="#00FFC4" stroke-width="1.5" fill="none" opacity=".8"><path d="M70 90h22M138 90h22M30 30q80-30 160 0" stroke-dasharray="4 4"/></g></svg><figcaption>Ilustração esquemática: robôs móveis e automação de pequenas cargas. Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-n">NÃO ESTIMADO</span> CAPEX</div><div class="pc-m">Motivo: movimento estratégico, sem projeto de cliente.</div><div class="pc-links"><a href="https://mexicoindustry.com/noticia/mecalux-impulsa-robots-amr-para-transformar-la-operacion-de-almacenes" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=Mecalux%20%20rob%C3%B4s%20m%C3%B3veis%20e%20automa%C3%A7%C3%A3o%20de%20pequenas%20cargas" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="SSI Schaefer" data-reg="Exterior">
+  <div class="main"><h3><span class="chip">SSI Schaefer</span>Schaeffler constrói centro logístico automatizado na Polônia</h3>
+  <p class="meta">Projeto em cliente · Katowice, Polônia · Exterior · 10/03/2026 · Loginfo24</p>
+  <p><span class="ev f">FATO</span> A Schaeffler e a SSI Schaefer estão construindo em Katowice um centro de distribuição automatizado, com armazém de pequenas peças de mais de 120 mil posições operado por robôs.</p>
+  <p><span class="ev h">HIPÓTESE</span> Autopeças globais padronizam automação de pequenas peças; no Brasil, CDs de peças podem seguir o mesmo caminho em reformas.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Priorizar CDs de autopeças no Brasil com estrutura antiga: ampliação e retrofit podem abrir conversa antes da automação.</p>
+  <p><a href="https://loginfo24.com/en/2026/03/10/schaeffler-builds-automated-logistics-center-with-ssi-schaefer/" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>Schaeffler</b><div>Segmento: Autopeças / indústria</div><div>Solução: Armazém automático de pequenas peças com robôs RackBot e RunBot, AGVs (DS Automotion) e AMRs</div><div>Números: Mais de 120 mil posições · 55 RackBots · 116 RunBots</div><div>Pessoas citadas: Jörg Zellerhoff (Warehouse Engineering Logistics, Schaeffler (cliente))</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Robôs móveis"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 108h200"/><rect x="24" y="78" width="46" height="22" rx="5"/><rect x="92" y="78" width="46" height="22" rx="5"/><rect x="160" y="78" width="40" height="22" rx="5"/><circle cx="34" cy="102" r="4"/><circle cx="60" cy="102" r="4"/><circle cx="102" cy="102" r="4"/><circle cx="128" cy="102" r="4"/><circle cx="168" cy="102" r="4"/><circle cx="192" cy="102" r="4"/></g><rect x="32" y="60" width="30" height="18" fill="rgba(242,169,59,.35)" stroke="#F2A93B"/><rect x="100" y="54" width="30" height="24" fill="rgba(242,169,59,.35)" stroke="#F2A93B"/><g stroke="#00FFC4" stroke-width="1.5" fill="none" opacity=".8"><path d="M70 90h22M138 90h22M30 30q80-30 160 0" stroke-dasharray="4 4"/></g></svg><figcaption>Ilustração esquemática: robôs móveis e automação de pequenas cargas. Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-n">NÃO ESTIMADO</span> CAPEX</div><div class="pc-m">Motivo: não encontramos referência pública confiável de custo por posição de pequenas peças com robôs.</div><div class="pc-links"><a href="https://loginfo24.com/en/2026/03/10/schaeffler-builds-automated-logistics-center-with-ssi-schaefer/" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=SSI%20Schaefer%20Schaeffler%20rob%C3%B4s%20m%C3%B3veis%20e%20automa%C3%A7%C3%A3o%20de%20pequenas%20cargas" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="Grupo Águia" data-reg="Brasil">
+  <div class="main"><h3><span class="chip">Grupo Águia</span>Grupo Águia fatura R$ 1,5 bilhão em 2025 e mira R$ 2 bilhões em 2026</h3>
+  <p class="meta">Investimento do concorrente · Ponta Grossa (PR) · Brasil · 07/12/2025 (aprox.) · Exame</p>
+  <p><span class="ev f">FATO</span> Reportagem da Exame informa que o Grupo Águia, dono da Águia Sistemas, faturou R$ 1,5 bilhão em 2025 e projeta superar R$ 2 bilhões em 2026, com novos equipamentos importados do Japão e ampliação industrial.</p>
+  <p><span class="ev h">HIPÓTESE</span> O maior concorrente nacional tem escala e caixa para disputar preço e prazo em grandes projetos.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Evitar disputa só por preço em grandes contas; competir por prazo, engenharia dedicada e atendimento regional.</p>
+  <p><a href="https://exame.com/negocios/o-grupo-de-r-15-bi-no-centro-da-corrida-por-obras-rapidas-e-sem-tijolo/" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>Sem cliente específico</b><div>Segmento: —</div><div>Solução: Estruturas de armazenagem, automação e construção industrializada</div><div>Números: R$ 1,5 bi (2025) · meta R$ 2 bi (2026)</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Fábrica"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 110V60l40 20V60l40 20V60l40 20V30h22v80M14 110h192M156 30v-14h12v14M178 110V46h28v64"/><path d="M30 92h14M70 92h14M110 92h14" opacity=".8"/></g><path d="M162 12q8-8 18-4" stroke="#8AA8B8" fill="none" stroke-width="2"/></svg><figcaption>Ilustração esquemática: fábrica / ampliação industrial. Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-n">NÃO ESTIMADO</span> CAPEX</div><div class="pc-m">Motivo: informação de faturamento do concorrente, não de investimento.</div><div class="pc-links"><a href="https://exame.com/negocios/o-grupo-de-r-15-bi-no-centro-da-corrida-por-obras-rapidas-e-sem-tijolo/" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=Grupo%20%C3%81guia%20%20f%C3%A1brica%20%2F%20amplia%C3%A7%C3%A3o%20industrial" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="Águia Sistemas" data-reg="Brasil">
+  <div class="main"><h3><span class="chip">Águia Sistemas</span>Águia investe R$ 40 milhões para ampliar fábrica no Paraná</h3>
+  <p class="meta">Investimento do concorrente · Ponta Grossa (PR) · Brasil · 31/10/2025 (aprox.) · Gazeta do Povo / MundoLogística</p>
+  <p><span class="ev f">FATO</span> A Águia anunciou investimento de R$ 40 milhões na unidade de Ponta Grossa e citou entre seus clientes Mercado Livre, Shopee e Amazon.</p>
+  <p><span class="ev h">HIPÓTESE</span> Mais capacidade fabril do concorrente tende a encurtar prazos de entrega dele em 2026.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Medir o prazo médio de entrega da BSA versus o mercado e usar pronta-entrega como argumento onde ele for melhor.</p>
+  <p><a href="https://mundologistica.com.br/noticias/aguia-sistemas-investe-fabrica-parana" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>Sem cliente específico</b><div>Segmento: —</div><div>Solução: Ampliação do parque fabril com tecnologia de origem japonesa</div><div>Números: R$ 40 mi · ~1 mil colaboradores diretos · 3,5 a 4 mil t de aço/mês</div><div>Pessoas citadas: Rogério Scheffer (Diretor-presidente da Águia Sistemas)</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Fábrica"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 110V60l40 20V60l40 20V60l40 20V30h22v80M14 110h192M156 30v-14h12v14M178 110V46h28v64"/><path d="M30 92h14M70 92h14M110 92h14" opacity=".8"/></g><path d="M162 12q8-8 18-4" stroke="#8AA8B8" fill="none" stroke-width="2"/></svg><figcaption>Ilustração esquemática: fábrica / ampliação industrial. Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-f">FATO</span> Investimento informado</div><div class="pc-v">R$ 40 milhões, valor anunciado pela própria Águia para a ampliação da fábrica</div><div class="pc-links"><a href="https://mundologistica.com.br/noticias/aguia-sistemas-investe-fabrica-parana" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=%C3%81guia%20Sistemas%20%20f%C3%A1brica%20%2F%20amplia%C3%A7%C3%A3o%20industrial" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="Mecalux" data-reg="Brasil">
+  <div class="main"><h3><span class="chip">Mecalux</span>Bem Brasil: dois armazéns autoportantes automáticos em Perdizes (MG)</h3>
+  <p class="meta">Projeto em cliente · Perdizes (MG) · Brasil · 09/07/2025 (aprox.) · MundoLogística</p>
+  <p><span class="ev f">FATO</span> A Bem Brasil ampliou a logística da fábrica de Perdizes com dois armazéns autoportantes da Mecalux, chegando a 66 mil paletes de capacidade.</p>
+  <p><span class="ev h">HIPÓTESE</span> Indústrias de congelados no Brasil já compram autoportante automatizado; a concorrência nesse nicho é com a Mecalux, não com fabricantes locais.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Mapear indústrias de congelados e frigoríficos no Radar e oferecer estrutura para expansões de câmaras convencionais.</p>
+  <p><a href="https://mundologistica.com.br/noticias/bem-brasil-integra-solucao-mecalux-armazenar-500-mil-toneladas-ano" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>Bem Brasil Alimentos</b><div>Segmento: Alimentos congelados</div><div>Solução: Dois autoportantes (clad-rack) com Pallet Shuttle automático, transelevador e Easy WMS</div><div>Números: 66 mil paletes · 500 mil t/ano expedidas</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Autoportante"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 112V26L110 8l96 18v86M14 112h192"/><path d="M40 106V40M76 106V36M144 106V36M180 106V40M40 62h36M40 84h36M144 62h36M144 84h36" opacity=".8"/><path d="M110 104V28M100 104h20M104 60h12"/></g><rect x="46" y="46" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="46" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="46" y="90" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="46" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="90" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="102" y="52" width="16" height="10" fill="#00B4D8" opacity=".8"/></svg><figcaption>Ilustração esquemática: armazém autoportante (clad-rack) com transelevador. Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-e">ESTIMATIVA</span> CAPEX do sistema de armazenagem</div><div class="pc-v">US$ 23,1 mi a US$ 79,2 mi</div><div class="pc-m">Cálculo: 66.000 posições × US$ 350 a 1.200 por posição (pallet shuttle automático). Referência pública: <a href="https://www.raymondsci.com/warehouse-automation/pallet-shuttle" target="_blank" rel="noopener">Raymond Storage Concepts (faixa de custo de pallet shuttle)</a>. Não inclui o prédio autoportante (envelope, cobertura, piso) nem o frio. Valor de referência de mercado dos EUA. Ordem de grandeza, não valor do contrato.</div><div class="pc-links"><a href="https://mundologistica.com.br/noticias/bem-brasil-integra-solucao-mecalux-armazenar-500-mil-toneladas-ano" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=Mecalux%20Bem%20Brasil%20Alimentos%20armaz%C3%A9m%20autoportante%20(clad-rack)%20com%20transelevador" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="SSI Schaefer" data-reg="Brasil">
+  <div class="main"><h3><span class="chip">SSI Schaefer</span>Grupo Boticário: autoportantes em Camaçari e São Gonçalo dos Campos (BA)</h3>
+  <p class="meta">Projeto em cliente · Camaçari e São Gonçalo dos Campos (BA) · Brasil · Data não informada na fonte · SSI Schaefer (case)</p>
+  <p><span class="ev f">FATO</span> O case da SSI Schaefer descreve autoportantes para a fábrica do Boticário em Camaçari e para o CD de São Gonçalo dos Campos, que atende franquias do Norte e Nordeste.</p>
+  <p><span class="ev h">HIPÓTESE</span> Referência histórica: mostra que grandes contas de cosméticos no Nordeste já operam com autoportante automatizado.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Usar como mapa de conta: ampliações de picking, mezaninos e estruturas convencionais ao redor desses CDs ainda podem ser oportunidade.</p>
+  <p><a href="https://www.ssi-schaefer.com/pt-br/tendencias-insights/cases-de-sucesso/solu%C3%A7%C3%B5es-log%C3%ADsticas-de-ponta-para-o-grupo-botic%C3%A1rio-1710420" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>Grupo Boticário</b><div>Segmento: Cosméticos</div><div>Solução: Armazéns autoportantes automáticos (40 m e 30 m de altura)</div><div>Números: +46 mil posições (fábrica) · ~20 mil posições (CD) · escopo total de 90 mil posições-palete</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Autoportante"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 112V26L110 8l96 18v86M14 112h192"/><path d="M40 106V40M76 106V36M144 106V36M180 106V40M40 62h36M40 84h36M144 62h36M144 84h36" opacity=".8"/><path d="M110 104V28M100 104h20M104 60h12"/></g><rect x="46" y="46" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="46" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="46" y="90" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="46" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="68" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="150" y="90" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="102" y="52" width="16" height="10" fill="#00B4D8" opacity=".8"/></svg><figcaption>Ilustração esquemática: armazém autoportante (clad-rack) com transelevador. Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-e">ESTIMATIVA</span> CAPEX do sistema de armazenagem</div><div class="pc-v">US$ 27 mi a US$ 72 mi</div><div class="pc-m">Cálculo: 90.000 posições × US$ 300 a 800 por posição (AS/RS de paletes instalado). Referência pública: <a href="https://goasrs.com/pallet-asrs-systems-guide/" target="_blank" rel="noopener">GoASRS (guia de custos de AS/RS de paletes)</a>. Escopo total informado no case (fábrica e CD). Não inclui o prédio. Data do projeto não informada. Ordem de grandeza, não valor do contrato.</div><div class="pc-links"><a href="https://www.ssi-schaefer.com/pt-br/tendencias-insights/cases-de-sucesso/solu%C3%A7%C3%B5es-log%C3%ADsticas-de-ponta-para-o-grupo-botic%C3%A1rio-1710420" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=SSI%20Schaefer%20Grupo%20Botic%C3%A1rio%20armaz%C3%A9m%20autoportante%20(clad-rack)%20com%20transelevador" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article><article class="card" data-comp="Mecalux" data-reg="América Latina">
+  <div class="main"><h3><span class="chip">Mecalux</span>RADEC renova CD de autopeças em Guadalajara</h3>
+  <p class="meta">Projeto em cliente · Guadalajara, México · América Latina · Data não informada na fonte · Mecalux México (caso prático)</p>
+  <p><span class="ev f">FATO</span> A Mecalux México destaca a renovação de um dos maiores CDs da RADEC, distribuidora de autopeças, com racks para paletes e racks com passarelas.</p>
+  <p><span class="ev h">HIPÓTESE</span> Mesmo a Mecalux vende estrutura convencional e passarelas em reformas de CD; o mercado de retrofit é disputado.</p>
+  <p><span class="ev r">RECOMENDAÇÃO</span> Tratar retrofit e ampliação de CDs existentes como linha de prospecção própria no Radar.</p>
+  <p><a href="https://www.mecalux.com.mx/home" target="_blank" rel="noopener">Abrir matéria (fotos e detalhes) ↗</a></p></div>
+  <div class="side"><b>RADEC</b><div>Segmento: Autopeças (colisão)</div><div>Solução: Racks para paletes e racks com passarelas</div><div>Números: Não identificado</div><div>Pessoas citadas: Não identificado na fonte</div></div>
+  <div class="bench-prod"><figure class="pc-ilu"><svg viewBox="0 0 220 120" role="img" aria-label="Porta-paletes"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 110V14M80 110V14M140 110V14M200 110V14M20 44H200M20 78H200M10 110H210"/></g><rect x="30" y="26" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="30" y="60" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="30" y="94" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="52" y="26" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="52" y="60" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="52" y="94" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="92" y="26" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="92" y="60" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="92" y="94" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="112" y="26" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="112" y="60" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="112" y="94" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="152" y="26" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="152" y="60" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="152" y="94" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="172" y="26" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="172" y="60" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/><rect x="172" y="94" width="22" height="14" rx="1.5" fill="rgba(242,169,59,.35)" stroke="#F2A93B" stroke-width="1.2"/></svg><figcaption>Ilustração esquemática: porta-paletes seletivo. Não é foto do projeto.</figcaption></figure><div class="pc-box"><div class="pc-t"><span class="pev pev-n">NÃO ESTIMADO</span> CAPEX</div><div class="pc-m">Motivo: a fonte não informa a quantidade de posições.</div><div class="pc-links"><a href="https://www.mecalux.com.mx/home" target="_blank" rel="noopener">Fotos reais na matéria ↗</a><a href="https://www.google.com/search?tbm=isch&amp;q=Mecalux%20RADEC%20porta-paletes%20seletivo" target="_blank" rel="noopener">Buscar fotos no Google Imagens ↗</a></div></div></div>
+</article></div></section>
+<section class="panel"><h2>Recomendações</h2><ol><li><b>Alta densidade automatizada é o discurso dominante dos concorrentes.</b><small>Mecalux (4-Way Pallet Shuttle), Scheffer + Longa (4-Way) e Dematic (paletes automáticos) levaram o mesmo tema à INTRA-LOG 2026. RECOMENDAÇÃO: preparar comparativo técnico e de custo total de drive-in, push-back e porta-paletes versus shuttle, e avaliar uma parceria de shuttle com estrutura BSA.</small></li><li><b>O concorrente nacional virou integrador completo.</b><small>A Águia soma estrutura, robótica e software, com escala de R$ 1,5 bi e R$ 40 mi em fábrica. RECOMENDAÇÃO: não disputar só preço em grandes contas; vender prazo, engenharia dedicada, atendimento regional e retrofit.</small></li><li><b>Frio e alimentos congelados são o nicho do autoportante.</b><small>Bem Brasil (MG) e Frigo Logistics mostram demanda por autoportante em congelados. RECOMENDAÇÃO: incluir frigoríficos, laticínios e operadores de frio como segmento prioritário no Radar e preparar referência para câmaras frias.</small></li><li><b>Software é diferencial na proposta dos líderes.</b><small>Mecalux (Easy WMS) e SSI Schaefer (WAMAS) vendem estrutura com software. RECOMENDAÇÃO: firmar parcerias com WMS nacionais para não perder concorrências que exigem pacote completo.</small></li><li><b>Clientes de concorrentes também são sinais.</b><small>Quem automatizou um CD ou fábrica pode ampliar estruturas convencionais, picking e mezaninos ao redor (HIPÓTESE, a confirmar caso a caso). RECOMENDAÇÃO: avisar o BDR quando um cliente citado aqui estiver na sua carteira.</small></li></ol></section>
+<footer>Benchmarking de concorrentes · Bertolini Sistemas de Armazenagem · gerado pelo Radar BSA em 18/11/2026</footer>
+</div><aside class="mx-side" aria-hidden="true"><canvas id="mxR"></canvas></aside></div>
+<button class="heat-fab" type="button" id="heatFab" aria-label="Abrir mapa de projetos dos concorrentes" title="Mapa: concorrentes → clientes"><span>MAPA<small>PROJETOS</small></span></button>
+<section class="map-screen" id="mapScreen" aria-hidden="true" aria-labelledby="mapTitle">
+<aside class="mx-side" aria-hidden="true"><canvas id="mxML"></canvas></aside>
+<div class="wrap">
+<div class="holo-wrap"><header class="holo-hero" id="mapHero">
+  <span class="holo-grid" aria-hidden="true"></span><span class="holo-scan" aria-hidden="true"></span>
+  <span class="hud tl" aria-hidden="true"></span><span class="hud tr" aria-hidden="true"></span><span class="hud bl" aria-hidden="true"></span><span class="hud br" aria-hidden="true"></span>
+  <div class="holo-inner">
+    <div class="holo-top"><div>
+      <div class="holo-eyebrow"><span class="dot"></span>Bertolini BSA · Geointeligência competitiva</div>
+      <h1 class="holo-title" id="mapTitle">MAPA DE PROJETOS <span>/ Concorrentes → clientes atendidos</span></h1>
+      <div class="holo-sub">Pontos azuis: fábricas, sedes e escritórios dos concorrentes. Armazéns verdes: clientes finais. As linhas ligam cada concorrente aos projetos que ele vendeu.</div>
+    </div><button class="back-btn" type="button" id="mapBack">← Voltar ao Benchmarking</button></div>
+    <div class="holo-term" aria-hidden="true"><span class="p">time-comercial@bsa:~$</span>geo.trace --concorrentes --clientes --sku <span class="cur">▍</span></div>
+  </div>
+</header></div>
+<section class="kpis" id="mapKpis"></section>
+<section class="panel"><h2>Filtros</h2><div class="filters">
+  <select id="mpPais" aria-label="País do cliente"><option value="">Todos</option></select>
+  <select id="mpUf" aria-label="UF (Brasil)"><option value="">Todas</option></select>
+  <select id="mpSku" aria-label="SKU / produto"><option value="">Todos os produtos</option></select>
+  <select id="mpComp" aria-label="Concorrente"><option value="">Todos</option></select>
+</div><p class="muted" style="margin:8px 0 0">Filtros: país do cliente · UF (Brasil) · SKU / produto · concorrente.</p></section>
+<section class="panel"><h2>Mapa <span class="nw-status" id="mapCount"></span></h2>
+  <div id="compMap" class="map-dark" role="region" aria-label="Mapa de concorrentes e clientes"></div>
+  <div class="map-legend"><span><i class="lg-fab"></i>Fábrica, sede ou escritório do concorrente</span><span><i class="lg-line"></i>Projeto vendido (concorrente → cliente)</span><span><i><svg width="18" height="16" viewBox="0 0 28 24"><path d="M2 11 14 3l12 8v11H2z" fill="#16c172" stroke="#b9ffd9" stroke-width="1.5"/><rect x="10" y="14" width="8" height="8" fill="#0b3d24"/></svg></i>Cliente final (armazém)</span></div>
+  <p class="muted" style="margin:10px 0 0">Localizações por cidade (centro do município), não o endereço exato da planta. “Aprox.” indica cidade incerta na fonte. Quando a fonte não informa o escritório local, a linha parte da sede internacional do concorrente.</p>
+</section>
+<section class="panel"><h2>Conexões no mapa</h2><div class="tbl"><table><thead><tr><th>Concorrente (origem)</th><th>Cliente</th><th>Local do cliente</th><th>SKU / produto</th><th>Data</th><th>Fonte</th></tr></thead><tbody id="mapRows"></tbody></table></div></section>
+<footer>Mapa de projetos dos concorrentes · Bertolini Sistemas de Armazenagem · uso interno do time comercial</footer>
+</div>
+<aside class="mx-side" aria-hidden="true"><canvas id="mxMR"></canvas></aside>
+</section>
+
+<script>
+function matrixRain(id){var c=document.getElementById(id);if(!c)return;var x=c.getContext('2d');c.width=c.parentElement.clientWidth;c.height=c.parentElement.clientHeight;var ch='01PAIMBIQPS2026#SQL+XLSX$',fs=13,cols=Math.floor(c.width/fs),d=[];for(var i=0;i<cols;i++)d[i]=Math.floor(Math.random()*c.height/fs);function draw(){x.fillStyle='rgba(5,11,16,0.15)';x.fillRect(0,0,c.width,c.height);x.fillStyle='#00FFC4';x.font='bold '+fs+'px monospace';for(var i=0;i<d.length;i++){x.fillText(ch.charAt(Math.floor(Math.random()*ch.length)),i*fs,d[i]*fs);if(d[i]*fs>c.height&&Math.random()>0.975)d[i]=0;d[i]++;}}if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches){draw();return;}setInterval(function(){if(!document.hidden)draw();},40);}
+function holoTilt(el){if(!el||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;el.style.setProperty('--ry',(x*5).toFixed(2)+'deg');el.style.setProperty('--rx',(-y*4).toFixed(2)+'deg');});el.addEventListener('pointerleave',function(){el.style.setProperty('--ry','0deg');el.style.setProperty('--rx','0deg');});}
+matrixRain('mxL');matrixRain('mxR');holoTilt(document.getElementById('hero'));
+(function(){var fc=document.getElementById('fc'),fr=document.getElementById('fr');function f(){var c=fc.value,r=fr.value;document.querySelectorAll('#list .card').forEach(function(el){el.style.display=(!c||el.dataset.comp===c)&&(!r||el.dataset.reg===r)?'':'none';});}fc.addEventListener('change',f);fr.addEventListener('change',f);})();
+</script>
+<script>(function(){
+var API="https://paim-ia-prospect-2-0-cld.onrender.com/api/news",QUERIES=[{"comp": "Mecalux", "q": "\"Mecalux\"", "langs": ["pt", "en", "es"]}, {"comp": "Águia Sistemas", "q": "\"Águia Sistemas\"", "langs": ["pt"]}, {"comp": "SSI Schaefer", "q": "\"SSI Schaefer\"", "langs": ["pt", "en"]}, {"comp": "Dematic", "q": "\"Dematic\"", "langs": ["pt", "en"]}, {"comp": "Jungheinrich", "q": "\"Jungheinrich\" (armazém OR intralogística OR \"centro de distribuição\")", "langs": ["pt"]}, {"comp": "ISMA", "q": "\"ISMA\" (armazenagem OR porta-paletes)", "langs": ["pt"]}, {"comp": "Longa Industrial", "q": "\"Longa Industrial\"", "langs": ["pt"]}, {"comp": "Scheffer", "q": "\"Scheffer Logística\"", "langs": ["pt"]}, {"comp": "AR Racking", "q": "\"AR Racking\"", "langs": ["pt", "es"]}];
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fmt(d){if(!d)return 'data não informada';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+var st=document.getElementById('nwStatus'),box=document.getElementById('nwList');
+function load(){
+  if(!box)return;
+  st.textContent='· buscando notícias (o servidor pode levar até 1 minuto para acordar)…';
+  var byLang={};QUERIES.forEach(function(q){q.langs.forEach(function(l){(byLang[l]=byLang[l]||[]).push(q);});});
+  var calls=Object.keys(byLang).map(function(l){var qs=byLang[l].map(function(q){return 'q='+encodeURIComponent(q.q);}).join('&');return fetch(API+'?'+qs+'&lang='+l+'&days=30').then(function(r){return r.json();}).then(function(d){return(d.items||[]).map(function(it){var m=byLang[l].filter(function(q){return q.q===it.consulta;})[0];it.comp=m?m.comp:it.consulta;return it;});}).catch(function(){return null;});});
+  Promise.all(calls).then(function(res){
+    var ok=res.filter(function(x){return x;}),all=[].concat.apply([],ok),seen={},list=[];
+    all.sort(function(a,b){return(b.data||'').localeCompare(a.data||'');}).forEach(function(it){var k=it.titulo.toLowerCase();if(!seen[k]){seen[k]=1;list.push(it);}});
+    if(!ok.length){st.textContent='· não foi possível buscar agora; tente recarregar em 1 minuto.';box.innerHTML='';return;}
+    st.textContent='· atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+list.length+' notícias dos últimos 30 dias · Google Notícias';
+    box.innerHTML=list.slice(0,40).map(function(it){return '<div class="nw-item"><div><span class="nw-chip">'+esc(it.comp)+'</span><a class="t" href="'+esc(it.url)+'" target="_blank" rel="noopener">'+esc(it.titulo)+'</a><div class="nw-meta">'+esc(it.fonte||'fonte')+' · '+esc(fmt(it.data))+'<span class="nw-nv">NÃO VERIFICADO</span></div></div></div>';}).join('')||'<p class="muted">Nenhuma notícia nos últimos 30 dias.</p>';
+  });
+}
+load();
+try{var h=location.hash.match(/#m=([A-Za-z0-9_-]+)/);if(h){var b64=h[1].replace(/-/g,'+').replace(/_/g,'/');var json=decodeURIComponent(escape(atob(b64)));var extra=JSON.parse(json),list=document.getElementById('list');
+  if(Array.isArray(extra)&&list){extra=extra.filter(function(b){return list.textContent.indexOf(b.titulo)<0;});list.insertAdjacentHTML('afterbegin',extra.map(function(b){return '<article class="card" data-comp="'+esc(b.concorrente)+'" data-reg="'+esc(b.regiao)+'"><div class="main"><h3><span class="chip">'+esc(b.concorrente)+'</span>'+esc(b.titulo)+'</h3><p class="meta">'+esc(b.tipo)+' · '+esc(b.local||'Local não informado')+' · '+esc(b.regiao)+' · '+esc(b.data?fmt(b.data):'Data não informada')+' · '+esc(b.fonte||'')+'</p><p><span class="ev f">FATO</span> '+esc(b.fato)+'</p>'+(b.leitura?'<p><span class="ev h">HIPÓTESE</span> '+esc(b.leitura)+'</p>':'')+(b.url?'<p><a href="'+esc(b.url)+'" target="_blank" rel="noopener">Abrir matéria ↗</a></p>':'')+'</div><div class="side"><b>'+esc(b.cliente||'Sem cliente específico')+'</b><div>Segmento: '+esc(b.segmento||'—')+'</div><div>Solução: '+esc(b.solucao||'—')+'</div><div>Números: '+esc(b.numeros||'Não identificado')+'</div></div></article>';}).join(''));}}}catch(e){}
+})();
+</script>
+<script>(function(){
+var D={"factories":[{"key":"mecalux_es","nome":"Mecalux · sede internacional","tipo":"Sede","cidade":"Cornellà de Llobregat","uf":"","pais":"Espanha","lat":41.357,"lon":2.07,"fonte":"automa.net (cadastro da empresa)","url":"https://automa.net/company/mecalux"},{"key":"mecalux_br","nome":"Mecalux Brasil · escritório","tipo":"Escritório no Brasil","cidade":"Hortolândia","uf":"SP","pais":"Brasil","lat":-22.858,"lon":-47.22,"fonte":"Mecalux (site internacional)","url":"https://www.mecalux.com/"},{"key":"mecalux_mx","nome":"Mecalux México · escritório","tipo":"Escritório no México","cidade":"Guadalajara","uf":"","pais":"México","lat":20.659,"lon":-103.349,"fonte":"Mecalux México","url":"https://www.mecalux.com.mx/"},{"key":"ssi_de","nome":"SSI Schaefer · sede internacional","tipo":"Sede","cidade":"Neunkirchen (Siegerland)","uf":"","pais":"Alemanha","lat":50.797,"lon":8.002,"fonte":"SSI Schaefer (localidades)","url":"https://ssi-schaefer.com/en-de/international-headquarters-in-neunkirchen-de--2816"},{"key":"aguia_br","nome":"Águia Sistemas · fábrica","tipo":"Fábrica","cidade":"Ponta Grossa","uf":"PR","pais":"Brasil","lat":-25.095,"lon":-50.162,"fonte":"MundoLogística","url":"https://mundologistica.com.br/noticias/aguia-sistemas-investe-fabrica-parana"},{"key":"jungh_br","nome":"Jungheinrich Brasil · sede","tipo":"Sede no Brasil","cidade":"Itupeva","uf":"SP","pais":"Brasil","lat":-23.153,"lon":-47.058,"fonte":"Frota&Cia","url":"https://frotacia.com.br/jungheinrich-vai-ampliar-as-suas-operacoes-no-brasil-e-tem-nas-empilhadeiras-eletricas-aliadas-contra-o-impacto-ambiental/"}],"links":[{"origem":"mecalux_br","comp":"Mecalux","origemNome":"Mecalux Brasil · escritório","origemCidade":"Hortolândia","oLat":-22.858,"oLon":-47.22,"sku":"armazém autoportante (clad-rack) com transelevador","numeros":"66 mil paletes · 500 mil t/ano expedidas","data":"09/07/2025 (aprox.)","fonte":"MundoLogística","url":"https://mundologistica.com.br/noticias/bem-brasil-integra-solucao-mecalux-armazenar-500-mil-toneladas-ano","obs":"","clientes":[{"nome":"Bem Brasil Alimentos","cidade":"Perdizes","uf":"MG","pais":"Brasil","lat":-19.353,"lon":-47.296}]},{"origem":"ssi_de","comp":"SSI Schaefer","origemNome":"SSI Schaefer · sede internacional","origemCidade":"Neunkirchen (Siegerland)","oLat":50.797,"oLon":8.002,"sku":"armazém autoportante (clad-rack) com transelevador","numeros":"+46 mil posições (fábrica) · ~20 mil posições (CD) · escopo total de 90 mil posições-palete","data":"Data não informada na fonte","fonte":"SSI Schaefer (case)","url":"https://www.ssi-schaefer.com/pt-br/tendencias-insights/cases-de-sucesso/solu%C3%A7%C3%B5es-log%C3%ADsticas-de-ponta-para-o-grupo-botic%C3%A1rio-1710420","obs":"Escritório da SSI Schaefer no Brasil não identificado na fonte; a linha parte da sede internacional.","clientes":[{"nome":"Grupo Boticário (fábrica)","cidade":"Camaçari","uf":"BA","pais":"Brasil","lat":-12.698,"lon":-38.324},{"nome":"Grupo Boticário (CD)","cidade":"São Gonçalo dos Campos","uf":"BA","pais":"Brasil","lat":-12.433,"lon":-38.966}]},{"origem":"mecalux_es","comp":"Mecalux","origemNome":"Mecalux · sede internacional","origemCidade":"Cornellà de Llobregat","oLat":41.357,"oLon":2.07,"sku":"armazém automático de paletes (transelevadores)","numeros":"6 transelevadores","data":"09/10/2026","fonte":"Mecalux (notícias)","url":"https://www.mecalux.com.br/empresa/noticias","obs":"","clientes":[{"nome":"PepsiCo","cidade":"Michrów","uf":"","pais":"Polônia","lat":51.86,"lon":20.72,"aprox":true}]},{"origem":"mecalux_es","comp":"Mecalux","origemNome":"Mecalux · sede internacional","origemCidade":"Cornellà de Llobregat","oLat":41.357,"oLon":2.07,"sku":"pallet shuttle / 4-Way (alta densidade)","numeros":"","data":"22/06/2026","fonte":"Mecalux (notícias)","url":"https://www.mecalux.com.br/empresa/noticias","obs":"","clientes":[{"nome":"GBS","cidade":"Billy-Berclau","uf":"","pais":"França","lat":50.518,"lon":2.866}]},{"origem":"ssi_de","comp":"SSI Schaefer","origemNome":"SSI Schaefer · sede internacional","origemCidade":"Neunkirchen (Siegerland)","oLat":50.797,"oLon":8.002,"sku":"miniload para caixas","numeros":"22 miniloads · mais de 300 mil posições de caixa","data":"16/10/2026","fonte":"SSI Schaefer (newsroom)","url":"https://www.ssi-schaefer.com/en-us/newsroom/news","obs":"","clientes":[{"nome":"adidas","cidade":"Spartanburg","uf":"","pais":"EUA","lat":34.95,"lon":-81.932}]},{"origem":"ssi_de","comp":"SSI Schaefer","origemNome":"SSI Schaefer · sede internacional","origemCidade":"Neunkirchen (Siegerland)","oLat":50.797,"oLon":8.002,"sku":"robôs móveis e automação de pequenas cargas","numeros":"Mais de 120 mil posições · 55 RackBots · 116 RunBots","data":"10/03/2026","fonte":"Loginfo24","url":"https://loginfo24.com/en/2026/03/10/schaeffler-builds-automated-logistics-center-with-ssi-schaefer/","obs":"","clientes":[{"nome":"Schaeffler","cidade":"Katowice","uf":"","pais":"Polônia","lat":50.264,"lon":19.023}]},{"origem":"mecalux_mx","comp":"Mecalux","origemNome":"Mecalux México · escritório","origemCidade":"Guadalajara","oLat":20.659,"oLon":-103.349,"sku":"porta-paletes seletivo","numeros":"","data":"Data não informada na fonte","fonte":"Mecalux México (caso prático)","url":"https://www.mecalux.com.mx/home","obs":"","clientes":[{"nome":"RADEC","cidade":"Guadalajara","uf":"","pais":"México","lat":20.7,"lon":-103.4}]}]};
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var WH='<svg width="28" height="24" viewBox="0 0 28 24" aria-hidden="true"><path d="M2 11 14 3l12 8v11H2z" fill="#16c172" stroke="#b9ffd9" stroke-width="1.5"/><rect x="10" y="14" width="8" height="8" fill="#0b3d24"/><path d="M6 13h4M18 13h4" stroke="#b9ffd9" stroke-width="1.2"/></svg>';
+var M=null,LY=null;function mapBase(map){var att='<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';function esri(){if(map._paimEsri)return;map._paimEsri=1;L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles &copy; Esri'}).addTo(map);}function webgl(){try{var c=document.createElement('canvas');return !!(c.getContext('webgl2')||c.getContext('webgl'));}catch(_){return false;}}try{if(L.maplibreGL&&window.maplibregl&&webgl()){var gl=L.maplibreGL({style:'https://tiles.openfreemap.org/styles/liberty',attribution:att}).addTo(map);if(map.attributionControl)map.attributionControl.addAttribution(att);var ok=false,drop=function(){if(ok)return;ok=true;try{map.removeLayer(gl);}catch(_){}esri();},mm=gl.getMaplibreMap&&gl.getMaplibreMap();if(mm){mm.once('load',function(){ok=true;});mm.on('error',function(){drop();});}setTimeout(drop,8000);return;}}catch(e){}esri();}var _x=0,matrixOn=false,$=function(id){return document.getElementById(id);};
+function arc(a,b){var la1=a[0],lo1=a[1],la2=b[0],lo2=b[1],mx=(la1+la2)/2,my=(lo1+lo2)/2,k=.18,cx=mx-(lo2-lo1)*k,cy=my+(la2-la1)*k,p=[];for(var t=0;t<=1.0001;t+=.04){p.push([(1-t)*(1-t)*la1+2*(1-t)*t*cx+t*t*la2,(1-t)*(1-t)*lo1+2*(1-t)*t*cy+t*t*lo2]);}return p;}
+function uniq(a){var o={},r=[];a.forEach(function(v){if(v&&!o[v]){o[v]=1;r.push(v);}});return r.sort();}
+function fill(id,vals,first){var s=$(id),cur=s.value;s.innerHTML='<option value="">'+first+'</option>'+uniq(vals).map(function(v){return '<option>'+esc(v)+'</option>';}).join('');s.value=cur;if(s.value!==cur)s.value='';}
+function fillAll(){var cl=[];D.links.forEach(function(e){e.clientes.forEach(function(c){cl.push(c);});});fill('mpPais',cl.map(function(c){return c.pais;}),'Todos');fill('mpUf',cl.filter(function(c){return c.pais==='Brasil';}).map(function(c){return c.uf;}),'Todas');fill('mpSku',D.links.map(function(e){return e.sku;}),'Todos os produtos');fill('mpComp',D.links.map(function(e){return e.comp;}),'Todos');$('mpUf').disabled=!!($('mpPais').value&&$('mpPais').value!=='Brasil');}
+function render(){
+  if(!window.L){$('compMap').innerHTML='<p class="muted" style="padding:20px">O mapa precisa de internet para carregar. Recarregue a página.</p>';return;}
+  if(!M){M=L.map('compMap',{worldCopyJump:true,minZoom:2}).setView([5,-30],2);mapBase(M);LY=L.layerGroup().addTo(M);}
+  M.invalidateSize();LY.clearLayers();
+  var fp=$('mpPais').value,fu=$('mpUf').value,fs=$('mpSku').value,fc=$('mpComp').value,rows=[],used={},bd=[];
+  D.links.forEach(function(e){
+    if(fs&&e.sku!==fs)return;if(fc&&e.comp!==fc)return;
+    var cls=e.clientes.filter(function(c){return(!fp||c.pais===fp)&&(!fu||c.uf===fu);});if(!cls.length)return;
+    used[e.origem]=1;
+    cls.forEach(function(c){
+      L.polyline(arc([e.oLat,e.oLon],[c.lat,c.lon]),{color:'#3d8bff',weight:2,opacity:.9,className:'flow-line'}).addTo(LY);
+      L.marker([c.lat,c.lon],{icon:L.divIcon({className:'wh-icon',html:WH,iconSize:[28,24],iconAnchor:[14,22]}),title:c.nome}).bindPopup('<b>'+esc(c.nome)+'</b><br>'+esc(c.cidade)+(c.uf?' ('+esc(c.uf)+')':'')+' · '+esc(c.pais)+(c.aprox?' · local aprox.':'')+'<br>Fornecedor: <b>'+esc(e.comp)+'</b><br>SKU: '+esc(e.sku)+'<br>'+esc(e.numeros||'')+'<br>'+esc(e.data)+(e.url?'<br><a href="'+esc(e.url)+'" target="_blank" rel="noopener">Abrir matéria ↗</a>':'')).addTo(LY);
+      bd.push([c.lat,c.lon]);rows.push([e,c]);
+    });
+  });
+  D.factories.forEach(function(f){
+    var on=used[f.key];if(!on&&(fp||fu||fs||fc))return;
+    if(on)L.circleMarker([f.lat,f.lon],{radius:14,weight:0,fillColor:'#2f80ff',fillOpacity:.18}).addTo(LY);
+    L.circleMarker([f.lat,f.lon],{radius:on?7:6,color:'#fff',weight:on?2:1.5,fillColor:'#2f80ff',fillOpacity:on?1:.6}).bindPopup('<b>'+esc(f.nome)+'</b><br>'+esc(f.tipo)+' · '+esc(f.cidade)+(f.uf?' ('+esc(f.uf)+')':'')+' · '+esc(f.pais)+(on?'':'<br>Nenhum projeto de cliente mapeado ainda.')+'<br><a href="'+esc(f.url)+'" target="_blank" rel="noopener">Fonte: '+esc(f.fonte)+' ↗</a>').addTo(LY);
+    bd.push([f.lat,f.lon]);
+  });
+  if(bd.length)M.fitBounds(bd,{padding:[40,40],maxZoom:6});
+  $('mapCount').textContent=rows.length+' cliente(s) no mapa';
+  $('mapRows').innerHTML=rows.length?rows.map(function(r){var e=r[0],c=r[1];return '<tr><td><b>'+esc(e.comp)+'</b><br><small>'+esc(e.origemNome)+' · '+esc(e.origemCidade)+'</small></td><td>'+esc(c.nome)+'</td><td>'+esc(c.cidade)+(c.uf?' ('+esc(c.uf)+')':'')+' · '+esc(c.pais)+(c.aprox?' <small>(aprox.)</small>':'')+'</td><td>'+esc(e.sku)+'</td><td>'+esc(e.data)+'</td><td>'+(e.url?'<a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.fonte)+' ↗</a>':esc(e.fonte))+(e.obs?'<br><small>'+esc(e.obs)+'</small>':'')+'</td></tr>';}).join(''):'<tr><td colspan="6" class="muted" style="text-align:center;padding:20px">Nenhuma conexão nos filtros atuais.</td></tr>';
+}
+function open(){if(!matrixOn&&window.matrixRain){matrixRain('mxML');matrixRain('mxMR');matrixOn=true;}
+  var h=$('mapHero');h.style.animation='none';void h.offsetWidth;h.style.animation='';
+  document.body.classList.add('map-open');$('mapScreen').classList.add('open');$('mapScreen').setAttribute('aria-hidden','false');$('heatFab').hidden=true;fillAll();setTimeout(function(){render();$('mapBack').focus();},560);}
+function close(){document.body.classList.remove('map-open');$('mapScreen').classList.remove('open');$('mapScreen').setAttribute('aria-hidden','true');$('heatFab').hidden=false;$('heatFab').focus();}
+$('heatFab').addEventListener('click',open);$('mapBack').addEventListener('click',close);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&$('mapScreen').classList.contains('open'))close();});
+['mpPais','mpUf','mpSku','mpComp'].forEach(function(id){$(id).addEventListener('change',function(){if(id==='mpPais'&&$('mpPais').value!=='Brasil')$('mpUf').value='';fillAll();render();});});
+var cl=0,br=0;D.links.forEach(function(e){cl+=e.clientes.length;e.clientes.forEach(function(c){if(c.pais==='Brasil')br++;});});
+$('mapKpis').innerHTML='<div class="kpi"><span class="muted">Clientes mapeados</span><b>'+cl+'</b></div><div class="kpi"><span class="muted">Clientes no Brasil</span><b>'+br+'</b><span class="muted">'+br+' de '+cl+'</span></div><div class="kpi"><span class="muted">Origens de concorrentes</span><b>'+D.factories.length+'</b></div><div class="kpi"><span class="muted">Produtos (SKU)</span><b>'+uniq(D.links.map(function(e){return e.sku;})).length+'</b></div>';
+if(window.holoTilt)holoTilt($('mapHero'));
+if(location.hash==='#mapa')open();
+})();
+</script>
 </body>
 </html>
